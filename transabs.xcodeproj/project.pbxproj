@@ -1,0 +1,205 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C80C9BB414055F0500009905 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C80C9BB314055F0500009905 /* main.cpp */; };
+		C80C9BB614055F0500009905 /* transabs.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C80C9BB514055F0500009905 /* transabs.1 */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C80C9BAD14055F0500009905 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				C80C9BB614055F0500009905 /* transabs.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		C80C9BAF14055F0500009905 /* transabs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = transabs; sourceTree = BUILT_PRODUCTS_DIR; };
+		C80C9BB314055F0500009905 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		C80C9BB514055F0500009905 /* transabs.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = transabs.1; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C80C9BAC14055F0500009905 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C80C9BA414055F0400009905 = {
+			isa = PBXGroup;
+			children = (
+				C80C9BB214055F0500009905 /* transabs */,
+				C80C9BB014055F0500009905 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C80C9BB014055F0500009905 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C80C9BAF14055F0500009905 /* transabs */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C80C9BB214055F0500009905 /* transabs */ = {
+			isa = PBXGroup;
+			children = (
+				C80C9BB314055F0500009905 /* main.cpp */,
+				C80C9BB514055F0500009905 /* transabs.1 */,
+			);
+			path = transabs;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C80C9BAE14055F0500009905 /* transabs */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C80C9BB914055F0500009905 /* Build configuration list for PBXNativeTarget "transabs" */;
+			buildPhases = (
+				C80C9BAB14055F0500009905 /* Sources */,
+				C80C9BAC14055F0500009905 /* Frameworks */,
+				C80C9BAD14055F0500009905 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = transabs;
+			productName = transabs;
+			productReference = C80C9BAF14055F0500009905 /* transabs */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C80C9BA614055F0400009905 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = C80C9BA914055F0400009905 /* Build configuration list for PBXProject "transabs" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = C80C9BA414055F0400009905;
+			productRefGroup = C80C9BB014055F0500009905 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C80C9BAE14055F0500009905 /* transabs */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C80C9BAB14055F0500009905 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C80C9BB414055F0500009905 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		C80C9BB714055F0500009905 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		C80C9BB814055F0500009905 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		C80C9BBA14055F0500009905 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		C80C9BBB14055F0500009905 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C80C9BA914055F0400009905 /* Build configuration list for PBXProject "transabs" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C80C9BB714055F0500009905 /* Debug */,
+				C80C9BB814055F0500009905 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C80C9BB914055F0500009905 /* Build configuration list for PBXNativeTarget "transabs" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C80C9BBA14055F0500009905 /* Debug */,
+				C80C9BBB14055F0500009905 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C80C9BA614055F0400009905 /* Project object */;
+}
