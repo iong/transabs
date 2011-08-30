@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		C80C9BB414055F0500009905 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C80C9BB314055F0500009905 /* main.cpp */; };
 		C80C9BB614055F0500009905 /* transabs.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C80C9BB514055F0500009905 /* transabs.1 */; };
+		C89EFDFD1408577D00421001 /* libboost_program_options.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C89EFDFC1408577D00421001 /* libboost_program_options.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +29,12 @@
 		C80C9BAF14055F0500009905 /* transabs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = transabs; sourceTree = BUILT_PRODUCTS_DIR; };
 		C80C9BB314055F0500009905 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C80C9BB514055F0500009905 /* transabs.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = transabs.1; sourceTree = "<group>"; };
+		C867789A140BC7F500AC5F18 /* Species.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Species.h; sourceTree = "<group>"; };
+		C867789C140BC85700AC5F18 /* Argon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Argon.h; sourceTree = "<group>"; };
+		C867789D140BDD9D00AC5F18 /* Polar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Polar.h; sourceTree = "<group>"; };
+		C89B8A291407BE7D002D3B4C /* Eigen3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Eigen3.h; sourceTree = "<group>"; };
+		C89EFDFA1407CE6800421001 /* DenseBaseExtractOperator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DenseBaseExtractOperator.h; sourceTree = "<group>"; };
+		C89EFDFC1408577D00421001 /* libboost_program_options.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_program_options.dylib; path = ../../../../../opt/local/lib/libboost_program_options.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,6 +42,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C89EFDFD1408577D00421001 /* libboost_program_options.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,6 +52,7 @@
 		C80C9BA414055F0400009905 = {
 			isa = PBXGroup;
 			children = (
+				C89EFDFC1408577D00421001 /* libboost_program_options.dylib */,
 				C80C9BB214055F0500009905 /* transabs */,
 				C80C9BB014055F0500009905 /* Products */,
 			);
@@ -61,7 +70,12 @@
 			isa = PBXGroup;
 			children = (
 				C80C9BB314055F0500009905 /* main.cpp */,
+				C867789D140BDD9D00AC5F18 /* Polar.h */,
+				C867789A140BC7F500AC5F18 /* Species.h */,
+				C867789C140BC85700AC5F18 /* Argon.h */,
 				C80C9BB514055F0500009905 /* transabs.1 */,
+				C89B8A291407BE7D002D3B4C /* Eigen3.h */,
+				C89EFDFA1407CE6800421001 /* DenseBaseExtractOperator.h */,
 			);
 			path = transabs;
 			sourceTree = "<group>";
@@ -140,6 +154,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = /opt/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -160,6 +175,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = /opt/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
 			};
@@ -168,14 +184,29 @@
 		C80C9BBA14055F0500009905 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					/opt/local/include,
+					/opt/local/include/eigen3,
+				);
+				LIBRARY_SEARCH_PATHS = /opt/local/lib;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Debug;
 		};
 		C80C9BBB14055F0500009905 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_OPTIMIZATION_LEVEL = 3;
+				HEADER_SEARCH_PATHS = (
+					/opt/local/include,
+					/opt/local/include/eigen3,
+				);
+				LIBRARY_SEARCH_PATHS = /opt/local/lib;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Release;
 		};
@@ -198,6 +229,7 @@
 				C80C9BBB14055F0500009905 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
