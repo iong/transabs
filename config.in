@@ -1,5 +1,7 @@
 coordinates=147
+eps=1.7
 [pump]
-wave-length=780.0
-intensity=1.0e15
-duration=5.0
+wave-length = 780.0
+intensity = 1.0e15
+duration = 5.0
+

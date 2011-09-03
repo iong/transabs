@@ -11,9 +11,9 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_01.hpp>
 
-#include "Eigen3.h"
+#include "Utils.h"
 
-boost::mt19937 rng;
+static boost::mt19937 rng;
 
 double  myrand(void)
 {
@@ -23,11 +23,11 @@ double  myrand(void)
 }
 
 
-Eigen::Vector3d polar2cart ( Eigen::Vector3d& src )
+void polar2cart (double p[], double& x, double& y, double& z)
 {
-        Eigen::Vector3d dest;
+        vec dest;
 
-        dest(0) = ( src(0) * sin ( src(1) ) ) * cos ( src(2) );
-        dest(1) = ( src(0) * sin ( src(1) ) ) * sin ( src(2) );
-        dest(2) = src(0) * cos ( src(1) );
+        x = ( p[0] * sin ( p[1] ) ) * cos ( p[2] );
+        y = ( p[0] * sin ( p[1] ) ) * sin ( p[2] );
+        z = p[0] * cos ( p[1] );
 }
