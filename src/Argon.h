@@ -15,7 +15,9 @@
 class Argon : public Species
 {
 private:
+
     static const int Z = 18;
+    static const double mass = 40.0;
 
     static const double ionization_potentials[Z];
 
@@ -27,6 +29,11 @@ private:
 public:
     double Eip ( int q ) {
         return ionization_potentials[q];
+    }
+
+    double getMass()
+    {
+        return mass * 1822.88848426455;
     }
 };
 

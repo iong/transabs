@@ -11,28 +11,26 @@
 #include "Common.h"
 #include "DirectSum.h"
 
-void DirectSum ( vec& q, vec& x, vec& y, vec& z, vec& fx, vec& fy, vec& fz,
-                 vec& phi, double& Utot )
+void DirectSum ()
 {
-    int i, j, N;
+    int i, j;
     vec    dphi(1);
     double  eps2;
 
-    N = q.n_rows;
-
-    vec dx ( N ), dy ( N ), dz ( N ), ir ( N ), ir2 ( N ), ir3 ( N );
-
+    vec dx ( Nparticles ), dy ( Nparticles ), dz ( Nparticles ),
+        ir ( Nparticles ), ir2 ( Nparticles ), ir3 ( Nparticles );
 
 
-    fx = 0.0;
-    fy = 0.0;
-    fz = 0.0;
-    phi = 0.0;
+
+    fx.zeros();
+    fy.zeros();
+    fz.zeros();
+    phi.zeros();
     Utot = 0.0;
 
     eps2 = soft_core * soft_core;
 
-    for ( i = N - 1; i > 0; i-- ) {
+    for ( i = Nparticles - 1; i > 0; i-- ) {
         dx.rows ( 0, i - 1 ) = x.rows ( 0, i - 1 ) - x ( i );
         dy.rows ( 0, i - 1 ) = y.rows ( 0, i - 1 ) - y ( i );
         dz.rows ( 0, i - 1 ) = z.rows ( 0, i - 1 ) - z ( i );
@@ -61,8 +59,8 @@ void DirectSum ( vec& q, vec& x, vec& y, vec& z, vec& fx, vec& fy, vec& fz,
         fy.rows ( 0, i - 1 ) += dy.rows ( 0, i - 1 ) * q ( i ) ;
         fz.rows ( 0, i - 1 ) += dz.rows ( 0, i - 1 ) * q ( i ) ;
 
-        fx.rows ( i,i ) = - sum ( dx.rows ( 0, i - 1 ) % q.rows ( 0, i - 1 ) );
-        fy.rows ( i,i ) = - sum ( dy.rows ( 0, i - 1 ) % q.rows ( 0, i - 1 ) );
-        fz.rows ( i,i ) = - sum ( dz.rows ( 0, i - 1 ) % q.rows ( 0, i - 1 ) );
+        fx.rows ( i,i ) += - sum ( dx.rows ( 0, i - 1 ) % q.rows ( 0, i - 1 ) );
+        fy.rows ( i,i ) += - sum ( dy.rows ( 0, i - 1 ) % q.rows ( 0, i - 1 ) );
+        fz.rows ( i,i ) += - sum ( dz.rows ( 0, i - 1 ) % q.rows ( 0, i - 1 ) );
     }
 }

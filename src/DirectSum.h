@@ -5,6 +5,6 @@
 
 using namespace arma;
 
-extern void DirectSum(vec& q, vec& x, vec& y, vec& z, vec& fx, vec& fy, vec& fz, vec& phi, double& Utot);
+extern void DirectSum();
 
 #endif
