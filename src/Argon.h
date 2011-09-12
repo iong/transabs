@@ -10,9 +10,9 @@
 #ifndef transabs_Argon_h
 #define transabs_Argon_h
 
-#include "Species.h"
+#include "Atom.h"
 
-class Argon : public Species
+class Argon : public Atom
 {
 private:
 

@@ -1,7 +1,13 @@
 coordinates=147
+tstart=0.0
+tstop=400.0
+dt=0.1
 eps=1.7
+localization_angle=3.0
 [pump]
 wave-length = 780.0
 intensity = 1.0e15
-duration = 5.0
-
+fwhm = 2
+[dump]
+interval = 10.0
+file = t.h5
