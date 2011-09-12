@@ -39,7 +39,7 @@ public:
     }
 
     double field ( double t ) {
-        return fmax * sin ( frequency * ( t - zero ) + phase ) * envelope ( t );
+        return fmax * cos ( frequency * ( t - zero ) + phase ) * envelope ( t );
     }
 };
 
