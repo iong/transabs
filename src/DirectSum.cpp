@@ -14,7 +14,7 @@
 
 void DirectSum ()
 {
-    int i;
+    size_t i;
     u32 closest_atom_id;
     vec    dphi(1);
     double  eps2, closest_atom;

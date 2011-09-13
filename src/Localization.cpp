@@ -48,7 +48,7 @@ static double angularVelocity (int ei, int aj)
 
 void Localization (double dt)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < Nparticles - Natom; i++)
     {
