@@ -54,9 +54,11 @@ void Localization (double dt)
     {
         if (new_next_atom[i] != next_atom[i])
         {
-            if (next_atom[i] >= 0 && revangle[next_atom[i]] > LocalizationAngle) {
+            if (next_atom[i] >= 0 && revangle[i] > LocalizationAngle) {
+                assert(nloc[next_atom[i]]>0);
                 nloc[next_atom[i]]--;
             }
+            valence[i] = 0;
 
             next_atom[i] = new_next_atom[i];
             next_atom_dist[i] = new_next_atom_dist[i];
@@ -66,6 +68,7 @@ void Localization (double dt)
         {
             double oldangle = revangle[i];
             revangle[i] += angularVelocity (i+Natom, next_atom[i]) * dt;
+            next_atom_dist[i] = sqrt(new_next_atom_dist[i]);
 
             if (revangle[i] >= LocalizationAngle && oldangle < LocalizationAngle)
             {

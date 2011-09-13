@@ -10,6 +10,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <cmath>
+#include <xmmintrin.h>
 
 
 #include <boost/filesystem/operations.hpp>
@@ -31,19 +32,25 @@ using namespace boost::assign;
 
 po::variables_map vm;
 
-int Natom, Nparticles;
+size_t Natom, Nparticles;
 vec    q, mass, x, y, z, vx, vy, vz, fx, fy, fz, phi, next_atom_dist,
 new_next_atom_dist, revangle, next_atom_t0;
-ivec next_atom, new_next_atom, nloc;
+ivec next_atom, new_next_atom, nloc, valence;
 double  Utot;
 
 VectorMap<double>   fDumpVectors, fVectors;
 VectorMap<int>  iVectors;
 
 
+mat quasi_free_hist, valence_hist;
+double histogram_rmax;
+double histogram_dr, histogram_dt;
+size_t histogramNo=0;
+vec histogram_bins, histogram_norm;
+
 Argon   sp;
 
-double t, tstart, tstop, dt, dumpdt = 10.0;
+double t, tstart, tstop, dt, dtSnapshot = 10.0;
 double soft_core, LocalizationAngle = 3.0;
 
 GaussianLaserPulse pump;
@@ -69,9 +76,12 @@ void process_options (int argc, char * argv[])
         ("tstart", po::value<double>()->required(), "soft-core parameter")
         ("tstop", po::value<double>()->required(), "soft-core parameter")
         ("dt", po::value<double>()->required(), "soft-core parameter")
-        ("dump.interval", po::value<double>()->required(), "time interval for data dump")
-        ("dump.file", po::value<string>()->required(), "dump data to this HDF5 file")
+        ("snapshot.interval", po::value<double>()->required(), "time interval for data dump")
+        ("snapshot.file", po::value<string>()->required(), "dump data to this HDF5 file")
         ("localization_angle", po::value<double>()->required(), "localization angle in multiples of pi")
+        ("histogram.rmax", po::value<double>()->required(), "maximum radius of the electron histogram")
+        ("histogram.dr", po::value<double>()->required(), "histogram bin width")
+        ("histogram.dt", po::value<double>()->required(), "time slice \"width\" of the histogram")
         ;
 
         cmdline.add (generic);
@@ -120,8 +130,12 @@ void process_options (int argc, char * argv[])
                                vm["pump.fwhm"].as<double>() * 41.3413733524035);
     pump.setZero (2.5 * vm["pump.fwhm"].as<double>() * 41.3413733524035);
 
-    dumpdt = vm["dump.interval"].as<double>();
+    dtSnapshot = vm["snapshot.interval"].as<double>();
     LocalizationAngle = vm["localization_angle"].as<double>() * M_PI;
+    
+    histogram_rmax = vm["histogram.rmax"].as<double>();
+    histogram_dr = vm["histogram.dr"].as<double>();
+    histogram_dt = vm["histogram.dt"].as<double>();
 
 }
 
@@ -171,7 +185,9 @@ void resize_vectors ()
 int main (int argc, char * argv[])
 {
     mat rt;
-    int ndt, ndump, NMaxParticles;
+    int ndt, ndtSnapshot, NMaxParticles;
+    
+    _mm_setcsr( _MM_MASK_MASK &~ (_MM_MASK_OVERFLOW|_MM_MASK_INVALID|_MM_MASK_DIV_ZERO) );
 
     process_options (argc, argv);
 
@@ -193,10 +209,20 @@ int main (int argc, char * argv[])
         ("new_next_atom_dist", &new_next_atom_dist) ("revangle", &revangle);
 
     insert (iVectors) ("next_atom", &next_atom)
-        ("new_next_atom", &new_next_atom);
+        ("new_next_atom", &new_next_atom)("valence", &valence);
 
     init_fields (fVectors, NMaxParticles);
     init_fields (iVectors, NMaxParticles);
+    
+    histogram_bins.zeros(floor(histogram_rmax/histogram_dr));
+    for (size_t j=0; j<histogram_bins.n_rows; j++) {
+        histogram_bins[j] = histogram_dr*j;
+    }
+    histogram_norm.zeros((int)floor((tstop-tstart)/histogram_dt) + 1);
+    quasi_free_hist.zeros(histogram_bins.n_rows, histogram_norm.n_rows);
+    valence_hist = quasi_free_hist;    
+
+    
 
     q.zeros();
     mass.ones();
@@ -227,11 +253,12 @@ int main (int argc, char * argv[])
     eout << t << "\t" << Utot << "\t" << Ekin << "\t" << Utot + Ekin << endl;
 
     ndt = (tstop - tstart) / dt;
-    ndump = dumpdt / dt;
-    HDF5IO h5dump (vm["dump.file"].as<string>());
+    ndtSnapshot = dtSnapshot / dt;
+    HDF5IO h5dump (vm["snapshot.file"].as<string>());
 
     for (int i = 1; i <= ndt; i++, t = tstart + dt * i)
     {
+        histogramNo = floor((i * dt) / histogram_dt);
         vec invmass = 1.0 / mass;
 
         vx += (0.5 * dt) * fx % q % invmass;
@@ -265,7 +292,7 @@ int main (int argc, char * argv[])
             eout << t << "\t" << pump.field (t) << "\t" << Utot << "\t" << Ekin << "\t" << Utot + Ekin << endl;
         }
 
-        if (i % ndump == 0)
+        if (i % ndtSnapshot == 0)
         {
             h5dump.newGroup();
             h5dump.add (fDumpVectors, Nparticles);
@@ -275,8 +302,15 @@ int main (int argc, char * argv[])
             h5dump.closeGroup();
         }
     }
-
     eout.close();
+    
+    quasi_free_hist *=  dt/(histogram_dt*(double)Natom);
+    valence_hist *=  dt/(histogram_dt*(double)Natom);
+    
+    h5dump.addStatistics("quasi_free_hist", quasi_free_hist);
+    h5dump.addStatistics("valence_hist", valence_hist);
+    h5dump.addStatistics("histogram_bins", histogram_bins);
+
 
     return 0;
 }

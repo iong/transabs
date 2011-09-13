@@ -29,9 +29,9 @@
 
 class HDF5IO
 {
-    hid_t   fid;
-    hid_t   current_group_id;
-    int ngroups;
+    hid_t   fid, RawGID, StatGID;
+    hid_t   current_raw_group, current_stat_group;
+    int nRawGroups, nStatGroups;
 
 
     hid_t GetH5T(double x) {
@@ -44,27 +44,29 @@ class HDF5IO
     }
 
 public:
-    HDF5IO(string fname) : ngroups(0) {
+    HDF5IO(string fname) : nRawGroups(0), nStatGroups(0) {
         fid = H5Fcreate(fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+        RawGID = H5Gcreate(fid, "Raw", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        StatGID = H5Gcreate(fid, "Statistics", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     }
 
     ~HDF5IO() {
+        H5Gclose(StatGID);
         H5Fclose(fid);
     }
 
     void newGroup() {
         stringstream gname;
 
-        ngroups++;
+        gname << nRawGroups;
 
-        gname << ngroups;
-
-        current_group_id = H5Gcreate(fid, gname.str().c_str(), H5P_DEFAULT,
+        current_raw_group = H5Gcreate(RawGID, gname.str().c_str(), H5P_DEFAULT,
                                      H5P_DEFAULT, H5P_DEFAULT);
     }
-
+    
     void closeGroup() {
-        H5Gclose(current_group_id);
+        H5Gclose(current_raw_group);
+        nRawGroups++;
     }
 
     template <typename T>
@@ -81,7 +83,7 @@ public:
 
         for (i = f.begin(); i != f.end(); i++) {
 
-            data_set_id = H5Dcreate(current_group_id, i->first.c_str(), data_type,
+            data_set_id = H5Dcreate(current_raw_group, i->first.c_str(), data_type,
                                     data_space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
             H5Dwrite(data_set_id, data_type, H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -101,17 +103,36 @@ public:
         data_space = H5Screate_simple(1, &N, NULL);
         data_type = GetH5T(x);
 
-	data_set_id = H5Dcreate(current_group_id, name, data_type, data_space,
-				H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        data_set_id = H5Dcreate(current_raw_group, name, data_type, data_space,
+                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-	H5Dwrite(data_set_id, data_type, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                     v.memptr());
+        H5Dwrite(data_set_id, data_type, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                         v.memptr());
 
-	H5Dclose(data_set_id);
+        H5Dclose(data_set_id);
 
         H5Sclose(data_space);
     }
-
+    
+    void addStatistics(const char *name, mat &m) {
+        hid_t data_space, data_set_id;
+        hsize_t dims[2];
+        
+        dims[1] = m.n_rows;
+        dims[0] = m.n_cols;
+        
+        data_space = H5Screate_simple(2, dims, dims);
+        
+        data_set_id = H5Dcreate(StatGID, name, H5T_NATIVE_DOUBLE, data_space,
+                                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        
+        H5Dwrite(data_set_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                 m.memptr());
+        
+        H5Dclose(data_set_id);
+        
+        H5Sclose(data_space);
+    }
 };
 
 #endif // HDF5IO_H

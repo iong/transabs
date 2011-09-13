@@ -10,6 +10,7 @@
 
 #include "Common.h"
 #include "DirectSum.h"
+#include "Utils.h"
 
 void DirectSum ()
 {
@@ -20,7 +21,7 @@ void DirectSum ()
 
     vec dx ( Nparticles ), dy ( Nparticles ), dz ( Nparticles ),
         ir ( Nparticles ), ir2 ( Nparticles ), ir3 ( Nparticles ),
-        atom_dist_sq;
+        atom_dist(Natom);
 
 
 
@@ -44,9 +45,17 @@ void DirectSum ()
 
         if (i>=Natom) {
             size_t  ie = i-Natom;
-            
-            atom_dist_sq = vec(ir2.memptr(), Natom, false, false);
-            closest_atom = atom_dist_sq.min(closest_atom_id);
+
+            atom_dist = sqrt(ir2.rows(0, Natom - 1));
+            if (!valence[ie]) {
+                update_histogram(quasi_free_hist, histogramNo, histogram_rmax, histogram_dr, atom_dist);
+                
+            }
+            else {
+                update_histogram(valence_hist, histogramNo, histogram_rmax, histogram_dr, atom_dist);
+            }
+            histogram_norm(histogramNo) += 1;
+            closest_atom = atom_dist.min(closest_atom_id);
             if (closest_atom < new_next_atom_dist[ie]) {
                 new_next_atom_dist[ie] = closest_atom;
                 new_next_atom[ie] = closest_atom_id;

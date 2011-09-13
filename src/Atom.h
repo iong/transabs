@@ -11,7 +11,7 @@
 
 class Atom {
 public:
-    virtual double Eip(int q) {}
+    virtual double Eip(int q) {return 0.0;}
 };
 
 #endif

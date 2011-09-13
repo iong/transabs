@@ -17,4 +17,7 @@ extern double  myrand(void);
 
 extern void polar2cart ( double p[], double& x, double& y, double& z );
 
+void    update_histogram(mat &h, size_t col, double rmax, double dr, vec &v);
+//void    update_histogram(vec &h, double rmax, double dr, double v);
+
 #endif
