@@ -45,6 +45,8 @@ void create_electron(Atom *a, int aid)
     pol [2] = 2.0 * M_PI * myrand();
     polar2cart(pol, vx[eid], vy[eid], vz[eid]);
     
+    Eoffset += -a->Eip(q[aid]);
+    
     valence[eid-Natom] = 1;
     next_atom[eid-Natom] = aid;
     next_atom_dist[eid-Natom] = 0.0;

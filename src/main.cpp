@@ -36,7 +36,7 @@ size_t Natom, Nparticles=0;
 vec    q, mass, x, y, z, vx, vy, vz, fx, fy, fz, phi, next_atom_dist,
 new_next_atom_dist, revangle, next_atom_t0;
 ivec next_atom, new_next_atom, nloc, valence;
-double  Utot;
+double  Utot, Eoffset;
 
 VectorMap<double>   fDumpVectors, fVectors;
 VectorMap<int>  iVectors;
@@ -48,7 +48,8 @@ double histogram_dr, histogram_dt;
 size_t histogramNo=0;
 vec histogram_bins, histogram_norm;
 
-vec nfree_electrons, nlocalized_electrons, ntot_electrons, Ekinavg, Epotavg, statTime;
+vec nfree_electrons, nlocalized_electrons, ntot_electrons, Ekinavg, Epotavg,
+    EoffsetAvg, statTime;
 mat cm, vcm;
 
 int Nruns=1;
@@ -241,9 +242,14 @@ int main (int argc, char * argv[])
             ("ntot_electrons", &ntot_electrons)
             ("Ekinavg", &Ekinavg)
             ("Epotavg", &Epotavg)
+            ("EoffsetAvg", &EoffsetAvg)
             ("time", &statTime);
-    for (map<string, mat *>::iterator j=statFields.begin(); j != statFields.end(); j++) {
+    
+    for (map<string, mat *>::iterator j=statFields.begin();
+         j != statFields.end(); j++) {
+        
         j->second->zeros((int)floor((tstop-tstart)/histogram_dt) + 1);
+    
     }
     
     insert(statFields)("cm", &cm)("vcm", &vcm);
@@ -278,7 +284,7 @@ int main (int argc, char * argv[])
 
         mass.rows (0, Natom - 1).fill (sp.getMass());
 
-        for (int i = 0; i < Natom; i++)
+        for (size_t i = 0; i < Natom; i++)
         {
             create_electron(&sp, i);
         }
@@ -295,7 +301,7 @@ int main (int argc, char * argv[])
                 
                 statTime(j) = tStatistics;
                 
-                for (int k=Natom; k<Nparticles; k++) {
+                for (size_t k=Natom; k<Nparticles; k++) {
                     double Ebody = 0.5*mass[k]*(vx[k]*vx[k] + vy[k]*vy[k] + vz[k]*vz[k]) + q[k]*phi[k] ;
                     if ( Ebody >=0 ) {
                         nfree_electrons[j] += 1.0;
@@ -317,6 +323,7 @@ int main (int argc, char * argv[])
                 
                 Ekinavg(j) += kinetic_energy();
                 Epotavg(j) += Utot;
+                EoffsetAvg(j) += Eoffset;
                 
                 tStatistics += histogram_dt;
             }
@@ -362,11 +369,28 @@ int main (int argc, char * argv[])
     
     quasi_free_hist *=  dt/(histogram_dt*(double)Natom*Nruns);
     valence_hist *=  dt/(histogram_dt*(double)Natom*Nruns);
+    
+    mat quasi_free_rho(quasi_free_hist), valence_rho(valence_hist);
+    vec shellVolumes(histogram_bins);
+    int Nbins = shellVolumes.n_rows;
+    
+    shellVolumes.rows(0, Nbins-2) = pow(histogram_bins.rows(1, Nbins-1), 3) -
+        pow(histogram_bins.rows(0, Nbins-2), 3);
+    shellVolumes(Nbins-1) = pow(histogram_rmax, 3) - pow(histogram_bins(Nbins-1), 3);
+    shellVolumes *= 4.0*M_PI/3.0;
+    
+    for (size_t j=0; j<quasi_free_rho.n_cols; j++) {
+        quasi_free_rho.col(j) = quasi_free_hist.col(j) / shellVolumes;
+        valence_rho.col(j) = valence_hist.col(j) / shellVolumes;
+    }
+        
 
     
     
     h5dump.addStatistics("quasi_free_hist", quasi_free_hist);
+    h5dump.addStatistics("quasi_free_rho", quasi_free_hist);
     h5dump.addStatistics("valence_hist", valence_hist);
+    h5dump.addStatistics("valence_rho", valence_hist);
     h5dump.addStatistics("histogram_bins", histogram_bins);
     
     for (map<string, mat *>::iterator j=statFields.begin(); j != statFields.end(); j++) {
