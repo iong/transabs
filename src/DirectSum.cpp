@@ -54,7 +54,6 @@ void DirectSum ()
             else {
                 update_histogram(valence_hist, histogramNo, histogram_rmax, histogram_dr, atom_dist);
             }
-            histogram_norm(histogramNo) += 1;
             closest_atom = atom_dist.min(closest_atom_id);
             if (closest_atom < new_next_atom_dist[ie]) {
                 new_next_atom_dist[ie] = closest_atom;

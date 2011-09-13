@@ -32,7 +32,7 @@ using namespace boost::assign;
 
 po::variables_map vm;
 
-size_t Natom, Nparticles;
+size_t Natom, Nparticles=0;
 vec    q, mass, x, y, z, vx, vy, vz, fx, fy, fz, phi, next_atom_dist,
 new_next_atom_dist, revangle, next_atom_t0;
 ivec next_atom, new_next_atom, nloc, valence;
@@ -47,6 +47,11 @@ double histogram_rmax;
 double histogram_dr, histogram_dt;
 size_t histogramNo=0;
 vec histogram_bins, histogram_norm;
+
+vec nfree_electrons, nlocalized_electrons, ntot_electrons, Ekinavg, Epotavg;
+mat cm, vcm;
+
+int Nruns=1;
 
 Argon   sp;
 
@@ -82,6 +87,7 @@ void process_options (int argc, char * argv[])
         ("histogram.rmax", po::value<double>()->required(), "maximum radius of the electron histogram")
         ("histogram.dr", po::value<double>()->required(), "histogram bin width")
         ("histogram.dt", po::value<double>()->required(), "time slice \"width\" of the histogram")
+        ("nruns", po::value<int>(), "# of trajectories to average over")
         ;
 
         cmdline.add (generic);
@@ -136,6 +142,10 @@ void process_options (int argc, char * argv[])
     histogram_rmax = vm["histogram.rmax"].as<double>();
     histogram_dr = vm["histogram.dr"].as<double>();
     histogram_dt = vm["histogram.dt"].as<double>();
+    
+    if (vm.count("nruns")) {
+        Nruns = vm["nruns"].as<int>();
+    }
 
 }
 
@@ -157,6 +167,17 @@ void init_fields (VectorMap<T>& f, int N)
     for (j = f.begin(); j != f.end(); j++)
     {
         j->second->zeros (N);
+    }
+}
+
+template<typename T>
+void init_fields (VectorMap<T>& f)
+{
+    typename VectorMap<T>::iterator j;
+    
+    for (j = f.begin(); j != f.end(); j++)
+    {
+        j->second->zeros ();
     }
 }
 
@@ -197,7 +218,7 @@ int main (int argc, char * argv[])
     NMaxParticles = 5 * Natom;
 
 
-
+    
     insert (fDumpVectors) ("q",  &q) ("mass", &mass)
         ("x", &x) ("y", &y) ("z", &z)
         ("vx", &vx) ("vy", &vy) ("vz", &vz)
@@ -210,106 +231,145 @@ int main (int argc, char * argv[])
 
     insert (iVectors) ("next_atom", &next_atom)
         ("new_next_atom", &new_next_atom)("valence", &valence);
-
+    
     init_fields (fVectors, NMaxParticles);
     init_fields (iVectors, NMaxParticles);
+    
+    map<string, mat *> statFields;
+    insert(statFields)("nfree_electrons", &nfree_electrons)
+            ("nlocalized_electrons", &nlocalized_electrons)
+            ("ntot_electrons", &ntot_electrons)
+            ("Ekinavg", &Ekinavg)
+            ("Epotavg", &Epotavg);
+    for (map<string, mat *>::iterator j=statFields.begin(); j != statFields.end(); j++) {
+        j->second->zeros((int)floor((tstop-tstart)/histogram_dt) + 1);
+    }
+    
+    insert(statFields)("cm", &cm)("vcm", &vcm);
+    cm.zeros(3, nfree_electrons.n_rows);
+    vcm = cm;
     
     histogram_bins.zeros(floor(histogram_rmax/histogram_dr));
     for (size_t j=0; j<histogram_bins.n_rows; j++) {
         histogram_bins[j] = histogram_dr*j;
     }
-    histogram_norm.zeros((int)floor((tstop-tstart)/histogram_dt) + 1);
-    quasi_free_hist.zeros(histogram_bins.n_rows, histogram_norm.n_rows);
-    valence_hist = quasi_free_hist;    
-
+    quasi_free_hist.zeros(histogram_bins.n_rows, nfree_electrons.n_rows);
+    valence_hist = quasi_free_hist;  
     
-
-    q.zeros();
-    mass.ones();
-    next_atom.fill (-2);
-    nloc.zeros (Natom);
-
-    x.rows (0, Natom - 1) = rt.col (0);
-    y.rows (0, Natom - 1) = rt.col (1);
-    z.rows (0, Natom - 1) = rt.col (2);
-    rt.reset();
-    
-    Nparticles = Natom;
-
-
-    mass.rows (0, Natom - 1).fill (sp.getMass());
-
-    for (int i = 0; i < Natom; i++)
-    {
-        create_electron(&sp, i);
-    }
-
-    double Ekin;
-
-    ofstream eout ("energy.dat");
-
-    DirectSum();
-    Ekin = kinetic_energy();
-    eout << t << "\t" << Utot << "\t" << Ekin << "\t" << Utot + Ekin << endl;
-
     ndt = (tstop - tstart) / dt;
     ndtSnapshot = dtSnapshot / dt;
     HDF5IO h5dump (vm["snapshot.file"].as<string>());
+    for (int run=0; run < Nruns; run++) {
+        init_fields (fVectors);
+        init_fields (iVectors);
 
-    for (int i = 1; i <= ndt; i++, t = tstart + dt * i)
-    {
-        histogramNo = floor((i * dt) / histogram_dt);
-        vec invmass = 1.0 / mass;
+        q.zeros();
+        mass.ones();
+        next_atom.fill (-2);
+        nloc.zeros (Natom);
 
-        vx += (0.5 * dt) * fx % q % invmass;
-        vy += (0.5 * dt) * fy % q % invmass;
-        vz += (0.5 * dt) * (fz + pump.field (t)) % q % invmass;
+        x.rows (0, Natom - 1) = rt.col (0);
+        y.rows (0, Natom - 1) = rt.col (1);
+        z.rows (0, Natom - 1) = rt.col (2);
+        
+        Nparticles = Natom;
 
-        x += dt * vx;
-        y += dt * vy;
-        z += dt * vz;
+
+        mass.rows (0, Natom - 1).fill (sp.getMass());
+
+        for (int i = 0; i < Natom; i++)
+        {
+            create_electron(&sp, i);
+        }
 
         DirectSum();
 
-
-        vx += (0.5 * dt) * fx % q % invmass;
-        vy += (0.5 * dt) * fy % q % invmass;
-        vz += (0.5 * dt) * (fz + pump.field (t)) % q % invmass;
-	
-        Localization(dt);
-
-        for (int j = 0; j < Natom; j++)
+        double  tStatistics = 0.0;
+        for (int i = 1; i <= ndt; i++, t = tstart + dt * i)
         {
-            if (nloc[j] == 0)
+            if (t>=tStatistics) {
+                size_t  j;
+                
+                j = floor(tStatistics/histogram_dt);
+                
+                for (int k=Natom; k<Nparticles; k++) {
+                    double Ebody = 0.5*mass[k]*(vx[k]*vx[k] + vy[k]*vy[k] + vz[k]*vz[k]) + q[k]*phi[k] ;
+                    if ( Ebody >=0 ) {
+                        nfree_electrons[j] += 1.0;
+                    }
+                    if (revangle[k - Natom] > LocalizationAngle) {
+                        nlocalized_electrons[j]++;
+                    }
+                }
+                
+                ntot_electrons(j) += Nparticles - Natom;
+                
+                cm(0, j) += mean(x.rows(0, Nparticles-1));
+                cm(1, j) += mean(y.rows(0, Nparticles-1));
+                cm(2, j) += mean(z.rows(0, Nparticles-1));
+                
+                vcm(0, j) += mean(vx.rows(0, Nparticles-1));
+                vcm(1, j) += mean(vy.rows(0, Nparticles-1));
+                vcm(2, j) += mean(vz.rows(0, Nparticles-1));
+                
+                Ekinavg(j) += kinetic_energy();
+                Epotavg(j) += Utot;
+                
+                tStatistics += histogram_dt;
+            }
+            histogramNo = floor((i * dt) / histogram_dt);
+            vec invmass = 1.0 / mass;
+
+            vx += (0.5 * dt) * fx % q % invmass;
+            vy += (0.5 * dt) * fy % q % invmass;
+            vz += (0.5 * dt) * (fz + pump.field (t)) % q % invmass;
+
+            x += dt * vx;
+            y += dt * vy;
+            z += dt * vz;
+
+            DirectSum();
+
+
+            vx += (0.5 * dt) * fx % q % invmass;
+            vy += (0.5 * dt) * fy % q % invmass;
+            vz += (0.5 * dt) * (fz + pump.field (t)) % q % invmass;
+        
+            Localization(dt);
+
+            for (int j = 0; j < Natom; j++)
             {
-                create_electron (&sp, j);
+                if (nloc[j] == 0)
+                {
+                    create_electron (&sp, j);
+                }
+            }
+
+            if (i % ndtSnapshot == 0)
+            {
+                h5dump.newGroup();
+                h5dump.add (fDumpVectors, Nparticles);
+                h5dump.add ("nloc", nloc, Natom);
+                h5dump.add ("next_atom", next_atom, Nparticles - Natom);
+                h5dump.add ("revangle", revangle, Nparticles - Natom);
+                h5dump.closeGroup();
             }
         }
-
-        if (i % 10 == 0)
-        {
-            Ekin = kinetic_energy();
-            eout << t << "\t" << pump.field (t) << "\t" << Utot << "\t" << Ekin << "\t" << Utot + Ekin << endl;
-        }
-
-        if (i % ndtSnapshot == 0)
-        {
-            h5dump.newGroup();
-            h5dump.add (fDumpVectors, Nparticles);
-            h5dump.add ("nloc", nloc, Natom);
-            h5dump.add ("next_atom", next_atom, Nparticles - Natom);
-            h5dump.add ("revangle", revangle, Nparticles - Natom);
-            h5dump.closeGroup();
-        }
     }
-    eout.close();
     
-    quasi_free_hist *=  dt/(histogram_dt*(double)Natom);
-    valence_hist *=  dt/(histogram_dt*(double)Natom);
+    quasi_free_hist *=  dt/(histogram_dt*(double)Natom*Nruns);
+    valence_hist *=  dt/(histogram_dt*(double)Natom*Nruns);
+
+    
     
     h5dump.addStatistics("quasi_free_hist", quasi_free_hist);
     h5dump.addStatistics("valence_hist", valence_hist);
     h5dump.addStatistics("histogram_bins", histogram_bins);
+    
+    for (map<string, mat *>::iterator j=statFields.begin(); j != statFields.end(); j++) {
+        *(j->second) /= (double)Nruns;
+        h5dump.addStatistics(j->first.c_str(), *(j->second));
+    }
 
 
     return 0;
