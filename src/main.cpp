@@ -48,7 +48,7 @@ double histogram_dr, histogram_dt;
 size_t histogramNo=0;
 vec histogram_bins, histogram_norm;
 
-vec nfree_electrons, nlocalized_electrons, ntot_electrons, Ekinavg, Epotavg;
+vec nfree_electrons, nlocalized_electrons, ntot_electrons, Ekinavg, Epotavg, statTime;
 mat cm, vcm;
 
 int Nruns=1;
@@ -240,7 +240,8 @@ int main (int argc, char * argv[])
             ("nlocalized_electrons", &nlocalized_electrons)
             ("ntot_electrons", &ntot_electrons)
             ("Ekinavg", &Ekinavg)
-            ("Epotavg", &Epotavg);
+            ("Epotavg", &Epotavg)
+            ("time", &statTime);
     for (map<string, mat *>::iterator j=statFields.begin(); j != statFields.end(); j++) {
         j->second->zeros((int)floor((tstop-tstart)/histogram_dt) + 1);
     }
@@ -292,6 +293,8 @@ int main (int argc, char * argv[])
                 
                 j = floor(tStatistics/histogram_dt);
                 
+                statTime(j) = tStatistics;
+                
                 for (int k=Natom; k<Nparticles; k++) {
                     double Ebody = 0.5*mass[k]*(vx[k]*vx[k] + vy[k]*vy[k] + vz[k]*vz[k]) + q[k]*phi[k] ;
                     if ( Ebody >=0 ) {
@@ -337,7 +340,7 @@ int main (int argc, char * argv[])
         
             Localization(dt);
 
-            for (int j = 0; j < Natom; j++)
+            for (size_t j = 0; j < Natom; j++)
             {
                 if (nloc[j] == 0)
                 {
