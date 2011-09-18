@@ -23,6 +23,8 @@
 #include "HDF5IO.h"
 #include "Electron.h"
 #include "Localization.h"
+#include "Statistics.h"
+
 
 using namespace std;
 
@@ -42,11 +44,11 @@ VectorMap<double>   fDumpVectors, fVectors;
 VectorMap<int>  iVectors;
 
 
-mat quasi_free_hist, valence_hist;
-double histogram_rmax;
-double histogram_dr, histogram_dt;
-size_t histogramNo=0;
-vec histogram_bins, histogram_norm;
+cube quasi_free_hist, valence_hist;
+static cube quasi_free_rho, valence_rho;
+SimpleHistogram2D radialDist;
+size_t histogramNo = 0;
+double histogram_dt;
 
 vec nfree_electrons, nlocalized_electrons, ntot_electrons, Ekinavg, Epotavg,
     EoffsetAvg, statTime;
@@ -139,9 +141,14 @@ void process_options (int argc, char * argv[])
 
     dtSnapshot = vm["snapshot.interval"].as<double>();
     LocalizationAngle = vm["localization_angle"].as<double>() * M_PI;
-    
-    histogram_rmax = vm["histogram.rmax"].as<double>();
-    histogram_dr = vm["histogram.dr"].as<double>();
+
+    radialDist = SimpleHistogram2D (0.0,
+                                    vm["histogram.rmax"].as<double>(),
+                                    vm["histogram.dr"].as<double>(),
+                                    0.0,
+                                    11.0,
+                                    1.0);
+
     histogram_dt = vm["histogram.dt"].as<double>();
     
     if (vm.count("nruns")) {
@@ -255,16 +262,13 @@ int main (int argc, char * argv[])
     insert(statFields)("cm", &cm)("vcm", &vcm);
     cm.zeros(3, nfree_electrons.n_rows);
     vcm = cm;
-    
-    histogram_bins.zeros(floor(histogram_rmax/histogram_dr));
-    for (size_t j=0; j<histogram_bins.n_rows; j++) {
-        histogram_bins[j] = histogram_dr*j;
-    }
-    quasi_free_hist.zeros(histogram_bins.n_rows, nfree_electrons.n_rows);
-    valence_hist = quasi_free_hist;  
-    
-    ndt = (tstop - tstart) / dt;
-    ndtSnapshot = dtSnapshot / dt;
+    qavg.zeros (Natom, nStatSlices);
+
+    quasi_free_hist.zeros (radialDist.nxbins, radialDist.nybins, nStatSlices);
+
+    valence_hist = quasi_free_hist;
+
+
     HDF5IO h5dump (vm["snapshot.file"].as<string>());
     for (int run=0; run < Nruns; run++) {
         init_fields (fVectors);
@@ -366,22 +370,36 @@ int main (int argc, char * argv[])
             }
         }
     }
-    
-    quasi_free_hist *=  dt/(histogram_dt*(double)Natom*Nruns);
-    valence_hist *=  dt/(histogram_dt*(double)Natom*Nruns);
-    
-    mat quasi_free_rho(quasi_free_hist), valence_rho(valence_hist);
-    vec shellVolumes(histogram_bins);
-    int Nbins = shellVolumes.n_rows;
-    
-    shellVolumes.rows(0, Nbins-2) = pow(histogram_bins.rows(1, Nbins-1), 3) -
-        pow(histogram_bins.rows(0, Nbins-2), 3);
-    shellVolumes(Nbins-1) = pow(histogram_rmax, 3) - pow(histogram_bins(Nbins-1), 3);
-    shellVolumes *= 4.0*M_PI/3.0;
-    
-    for (size_t j=0; j<quasi_free_rho.n_cols; j++) {
-        quasi_free_rho.col(j) = quasi_free_hist.col(j) / shellVolumes;
-        valence_rho.col(j) = valence_hist.col(j) / shellVolumes;
+
+    quasi_free_hist *=  dt / (histogram_dt * (double) Natom * Nruns);
+
+    valence_hist *=  dt / (histogram_dt * (double) Natom * Nruns);
+
+    vec shellVolumes, rbins (radialDist.get_xrange()), rmax;
+    rmax = radialDist.xmax;
+
+    shellVolumes = pow (join_cols (rbins.rows (1, rbins.n_elem - 1), rmax), 3) -
+                   pow (rbins, 3);
+    shellVolumes *= 4.0 * M_PI / 3.0;
+
+
+    quasi_free_rho = quasi_free_hist;
+    valence_rho = valence_hist;
+
+    for (size_t j = 0; j < quasi_free_rho.n_slices; j++)
+    {
+        for (size_t k = 0; k < quasi_free_rho.n_cols; k++)
+        {
+            quasi_free_rho.slice (j).col (k) /= shellVolumes;
+            valence_rho.slice (j).col (k) /= shellVolumes;
+        }
+    }
+
+    vec laserField (statTime.n_rows);
+
+    for (size_t j = 0; j < statTime.n_rows; j++)
+    {
+        laserField (j) = pump.field (statTime (j));
     }
         
 

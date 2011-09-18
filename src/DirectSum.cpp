@@ -16,8 +16,8 @@ void DirectSum ()
 {
     size_t i;
     u32 closest_atom_id;
-    vec    dphi(1);
-    double  eps2, closest_atom;
+    vec    dphi (1);
+    double  eps2, closest_atom, risq, rcutoffsq = rcluster * rcluster * 4.0;
 
     vec dx ( Nparticles ), dy ( Nparticles ), dz ( Nparticles ),
         ir ( Nparticles ), ir2 ( Nparticles ), ir3 ( Nparticles ),
@@ -43,25 +43,38 @@ void DirectSum ()
         ir2.rows(0, i-1) = square(dx.rows ( 0, i - 1 ))
             + square( dy.rows ( 0, i - 1 ) ) + square( dz.rows ( 0, i - 1 ) );
 
-        if (i>=Natom) {
-            size_t  ie = i-Natom;
+        risq = x (i) * x (i) + y (i) * y (i) + z (i) * z (i);
 
-            atom_dist = sqrt(ir2.rows(0, Natom - 1));
-            if (!valence[ie]) {
-                update_histogram(quasi_free_hist, histogramNo, histogram_rmax, histogram_dr, atom_dist);
-                
+        if (i >= Natom && risq < rcutoffsq)
+        {
+            atom_dist = sqrt (ir2.rows (0, Natom - 1));
+	    vec realCharge(q.subvec(allAtoms) - 1.0);
+
+            if (valence[i])
+            {
+                radialDist.increment(valence_hist.slice(histogramNo),
+					  atom_dist, realCharge);
             }
-            else {
-                update_histogram(valence_hist, histogramNo, histogram_rmax, histogram_dr, atom_dist);
+            else
+            {
+                radialDist.increment(quasi_free_hist.slice(histogramNo),
+					  atom_dist, realCharge);
             }
-            closest_atom = atom_dist.min(closest_atom_id);
-            if (closest_atom < new_next_atom_dist[ie]) {
-                new_next_atom_dist[ie] = closest_atom;
-                new_next_atom[ie] = closest_atom_id;
+
+            closest_atom = atom_dist.min (closest_atom_id);
+
+            if (closest_atom < new_next_atom_dist[i])
+            {
+                new_next_atom_dist[i] = closest_atom;
+                new_next_atom[i] = closest_atom_id;
             }
         }
-        
-        ir2.rows ( 0, i - 1 ) = 1.0 / (ir2.rows(0, i-1) + eps2 );
+        else if (i >= Natom)
+        {
+            new_next_atom[i] = -1;
+        }
+
+        ir2.rows(0, i-1) = 1.0 / (ir2.rows(0, i-1) + eps2);
 
         ir.rows ( 0, i - 1 ) = sqrt ( ir2.rows ( 0, i - 1 ) );
         ir3.rows ( 0, i - 1 ) = ir.rows ( 0, i - 1 ) % ir2.rows ( 0, i - 1 );

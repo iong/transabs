@@ -6,6 +6,7 @@
 #include <boost/program_options.hpp>
 
 #include <armadillo>
+#include "SimpleHistogram2D.h"
 
 
 
@@ -24,11 +25,9 @@ extern vec    q, mass, invmass, x, y, z, vx, vy, vz, fx, fy, fz, phi, next_atom_
 extern ivec next_atom, new_next_atom, nloc, valence;
 extern double  Utot, Eoffset;
 
-extern mat quasi_free_hist, valence_hist;
-extern double histogram_rmax;
-extern double histogram_dr;
+extern cube quasi_free_hist, valence_hist;
+extern SimpleHistogram2D radialDist;
 extern size_t histogramNo;
-extern vec histogram_norm;
 
 extern void resize_vectors ();
 
