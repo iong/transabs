@@ -22,5 +22,6 @@
 #define LOCALIZATION_H
 
 extern void Localization (double dt);
+extern void LocalizationEnergy();
 
 #endif // REVOLUTIONANGLES_H

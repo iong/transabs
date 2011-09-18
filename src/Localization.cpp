@@ -21,6 +21,7 @@
 
 #include "Common.h"
 #include "Localization.h"
+#include "Statistics.h"
 
 static double angularVelocity (int ei, int aj)
 {
@@ -48,32 +49,81 @@ static double angularVelocity (int ei, int aj)
 
 void Localization (double dt)
 {
-    size_t i;
+    double Erel;
+    size_t	i;
+    
+    nlocByEnergy.zeros();
 
-    for (i = 0; i < Nparticles - Natom; i++)
+    for (i = Natom; i < Nparticles; i++)
     {
-        if (new_next_atom[i] != next_atom[i])
+	if (new_next_atom(i) > 0 && new_next_atom_dist(i) > next_atom_dist(new_next_atom(i))) {
+	    new_next_atom(i) = -1;
+	}
+	
+	
+	
+        if (new_next_atom(i) != next_atom(i))
         {
-            if (next_atom[i] >= 0 && revangle[i] > LocalizationAngle) {
-                assert(nloc[next_atom[i]]>0);
-                nloc[next_atom[i]]--;
+            if (next_atom(i) >= 0 && revangle(i) > LocalizationAngle) {
+                nlocByRevAngle(next_atom(i))--;
             }
-            valence[i] = 0;
-
-            next_atom[i] = new_next_atom[i];
-            next_atom_dist[i] = new_next_atom_dist[i];
-            revangle[i] = 0.0;
+            valence(i) = 0;
+            revangle(i) = 0.0;
+	    
+	    next_atom(i) = new_next_atom(i);
         }
-        else
+        else if (next_atom(i) >= 0)
         {
-            double oldangle = revangle[i];
-            revangle[i] += angularVelocity (i+Natom, next_atom[i]) * dt;
-            next_atom_dist[i] = sqrt(new_next_atom_dist[i]);
+            double oldangle = revangle(i);
+            revangle(i) += angularVelocity (i, next_atom(i)) * dt;
 
-            if (revangle[i] >= LocalizationAngle && oldangle < LocalizationAngle)
+            if (revangle(i) >= LocalizationAngle && oldangle < LocalizationAngle)
             {
-                nloc[next_atom[i]]++;
+                nlocByRevAngle(next_atom(i))++;
             }
         }
+        
+        next_atom_dist(i) = new_next_atom_dist(i);
+	next_atom(i) = new_next_atom(i);
+	// nothing to do: new_next_atom = next_atom = -1
+        if (next_atom(i) < 0) {
+	    continue;
+	}
+	
+	Erel = kineticEnergy(i) + q(i)*q(next_atom(i))
+	    / sqrt(next_atom_dist(i)*next_atom_dist(i) + soft_core*soft_core);
+	
+	if (Erel < 0) {
+	    nlocByEnergy(next_atom(i))++;
+	}
+    }
+}
+
+void LocalizationEnergy()
+{
+    double Erel;
+    size_t	i;
+    
+    nlocByEnergy.zeros();
+    
+    for (i = Natom; i < Nparticles; i++)
+    {
+	next_atom(i) = new_next_atom(i);
+	next_atom_dist(i) = new_next_atom_dist(i);
+	
+	if (next_atom(i) == -1) {
+	    continue;
+	}
+	else if (next_atom(i) > 0 && next_atom_dist(i) > next_atom_dist(next_atom(i))) {
+	    next_atom(i) = -1;
+	    continue;
+	}
+        
+        Erel = kineticEnergy(i) + q(i)*q(next_atom(i))
+	    / sqrt(next_atom_dist(i)*next_atom_dist(i) + soft_core*soft_core);
+	
+	if (Erel < 0) {
+	    nlocByEnergy(next_atom(i))++;
+	}
     }
 }

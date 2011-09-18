@@ -47,17 +47,18 @@ void create_electron(Atom *a, int aid)
     
     Eoffset += -a->Eip(q[aid]);
     
-    valence[eid-Natom] = 1;
-    next_atom[eid-Natom] = aid;
-    next_atom_dist[eid-Natom] = 0.0;
-    revangle[eid-Natom] = LocalizationAngle;
+    valence[eid] = 1;
+    next_atom[eid] = aid;
+    next_atom_dist[eid] = 0.0;
+    revangle[eid] = LocalizationAngle;
     
     
     q[aid] += 1.0;
     if (q[aid] > 10) {
         cerr << "Stop\n";
     }
-    nloc[aid]++;
+    nlocByEnergy[aid]++;
+    nlocByRevAngle[aid]++;
 }
 
 
