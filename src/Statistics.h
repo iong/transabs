@@ -23,9 +23,19 @@
 
 #include "Common.h"
 
+
 extern double clusterRadius();
 
 extern vec kineticEnergy();
 extern double kineticEnergy(size_t i);
+
+extern  void initStats();
+extern  void collectStats(int tslice);
+extern  void incrementRadialDistributions(size_t ie, vec &atomDist,
+            vec &realCharge);
+extern  void normalizeStats(int);
+
+class HDF5IO;
+extern void dumpStats(HDF5IO& h5dump);
 
 #endif // STATISTICS_H

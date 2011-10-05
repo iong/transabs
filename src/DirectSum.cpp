@@ -6,11 +6,10 @@
 //  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
 
-
-
 #include "Common.h"
 #include "DirectSum.h"
 #include "Utils.h"
+#include "Statistics.h"
 
 void DirectSum ()
 {
@@ -18,12 +17,14 @@ void DirectSum ()
     u32 closest_atom_id;
     vec    dphi (1);
     double  eps2, closest_atom, risq, rcutoffsq = rcluster * rcluster * 4.0;
-
-    vec dx (Nparticles), dy (Nparticles), dz (Nparticles),
-    ir (Nparticles), ir2 (Nparticles), ir3 (Nparticles),
-    atom_dist (Natom);
-
-
+    vec dx (Nparticles);
+    vec dy (Nparticles);
+    vec dz (Nparticles);
+    vec ir (Nparticles);
+    vec ir2 (Nparticles);
+    vec ir3 (Nparticles);
+    vec atomDist (Natom);
+    vec realCharge(Natom);
 
     fx.zeros();
     fy.zeros();
@@ -34,6 +35,7 @@ void DirectSum ()
     eps2 = soft_core * soft_core;
 
     new_next_atom_dist.fill (INFINITY);
+    realCharge = q.subvec(allAtoms) - 1.0;
 
     for (i = Nparticles - 1; i > 0; i--)
     {
@@ -47,21 +49,11 @@ void DirectSum ()
 
         if (i >= Natom && risq < rcutoffsq)
         {
-            atom_dist = sqrt (ir2.rows (0, Natom - 1));
-	    vec realCharge(q.subvec(allAtoms) - 1.0);
+            atomDist = sqrt (ir2.rows (0, Natom - 1));
 
-            if (valence[i])
-            {
-                radialDist.increment(valence_hist.slice(histogramNo),
-					  atom_dist, realCharge);
-            }
-            else
-            {
-                radialDist.increment(quasi_free_hist.slice(histogramNo),
-					  atom_dist, realCharge);
-            }
+            incrementRadialDistributions(i, atomDist, realCharge);
 
-            closest_atom = atom_dist.min (closest_atom_id);
+            closest_atom = atomDist.min (closest_atom_id);
 
             if (closest_atom < new_next_atom_dist[i])
             {
