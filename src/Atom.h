@@ -9,9 +9,12 @@
 #ifndef ATOM_H
 #define ATOM_H
 
-class Atom {
+class Atom
+{
 public:
-    virtual double Eip(int q) {return 0.0;}
+    virtual double Eip ( int q ) = 0;
+    virtual double getMass ( ) = 0;
 };
+
 
 #endif
