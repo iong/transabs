@@ -37,7 +37,7 @@ public:
     }
 };
 
-const int Argon::ground_state_configuration[norbitals] = {2, 2, 6, 2, 6};
+const int Argon::ground_state_configuration[Argon::norbitals] = {2, 2, 6, 2, 6};
 
 const double   Argon::ionization_potentials[Argon::Z] = {
     0.578831312017641, 1.0154355016538, 1.49724366041896, 2.19808893789048,
