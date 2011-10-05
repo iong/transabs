@@ -50,18 +50,18 @@ static double angularVelocity (int ei, int aj)
 void Localization (double dt)
 {
     double Erel;
-    size_t	i;
-    
+    size_t  i;
+
     nlocByEnergy.zeros();
 
     for (i = Natom; i < Nparticles; i++)
     {
-	if (new_next_atom(i) > 0 && new_next_atom_dist(i) > next_atom_dist(new_next_atom(i))) {
-	    new_next_atom(i) = -1;
-	}
-	
-	
-	
+        if (new_next_atom(i) > 0 && new_next_atom_dist(i) > next_atom_dist(new_next_atom(i))) {
+            new_next_atom(i) = -1;
+        }
+
+
+
         if (new_next_atom(i) != next_atom(i))
         {
             if (next_atom(i) >= 0 && revangle(i) > LocalizationAngle) {
@@ -69,8 +69,8 @@ void Localization (double dt)
             }
             valence(i) = 0;
             revangle(i) = 0.0;
-	    
-	    next_atom(i) = new_next_atom(i);
+
+            next_atom(i) = new_next_atom(i);
         }
         else if (next_atom(i) >= 0)
         {
@@ -82,48 +82,48 @@ void Localization (double dt)
                 nlocByRevAngle(next_atom(i))++;
             }
         }
-        
+
         next_atom_dist(i) = new_next_atom_dist(i);
-	next_atom(i) = new_next_atom(i);
-	// nothing to do: new_next_atom = next_atom = -1
+        next_atom(i) = new_next_atom(i);
+        // nothing to do: new_next_atom = next_atom = -1
         if (next_atom(i) < 0) {
-	    continue;
-	}
-	
-	Erel = kineticEnergy(i) + q(i)*q(next_atom(i))
-	    / sqrt(next_atom_dist(i)*next_atom_dist(i) + soft_core*soft_core);
-	
-	if (Erel < 0) {
-	    nlocByEnergy(next_atom(i))++;
-	}
+            continue;
+        }
+
+        Erel = kineticEnergy(i) + q(i)*q(next_atom(i))
+               / sqrt(next_atom_dist(i)*next_atom_dist(i) + soft_core*soft_core);
+
+        if (Erel < 0) {
+            nlocByEnergy(next_atom(i))++;
+        }
     }
 }
 
-void LocalizationEnergy()
+void LocalizationByEnergy()
 {
     double Erel;
-    size_t	i;
-    
+    size_t  i;
+
     nlocByEnergy.zeros();
-    
+
     for (i = Natom; i < Nparticles; i++)
     {
-	next_atom(i) = new_next_atom(i);
-	next_atom_dist(i) = new_next_atom_dist(i);
-	
-	if (next_atom(i) == -1) {
-	    continue;
-	}
-	else if (next_atom(i) > 0 && next_atom_dist(i) > next_atom_dist(next_atom(i))) {
-	    next_atom(i) = -1;
-	    continue;
-	}
-        
+        next_atom(i) = new_next_atom(i);
+        next_atom_dist(i) = new_next_atom_dist(i);
+
+        if (next_atom(i) == -1) {
+            continue;
+        }
+        else if (next_atom(i) > 0 && next_atom_dist(i) > next_atom_dist(next_atom(i))) {
+            next_atom(i) = -1;
+            continue;
+        }
+
         Erel = kineticEnergy(i) + q(i)*q(next_atom(i))
-	    / sqrt(next_atom_dist(i)*next_atom_dist(i) + soft_core*soft_core);
-	
-	if (Erel < 0) {
-	    nlocByEnergy(next_atom(i))++;
-	}
+               / sqrt(next_atom_dist(i)*next_atom_dist(i) + soft_core*soft_core);
+
+        if (Erel < 0) {
+            nlocByEnergy(next_atom(i))++;
+        }
     }
 }
