@@ -1,10 +1,10 @@
 coordinates=147
 tstart=0.0
-tstop=500
+tstop=10
 dt=0.1
 eps=1.7
 localization_angle=3.0
-nruns = 10
+nruns = 2
 [pump]
 wave-length = 780.0
 intensity = 1.0e15
@@ -16,4 +16,7 @@ file = t.h5
 rmax=10
 dr=0.1
 dt=2.0
+[grid]
+dx=2.0
+size=32
 
