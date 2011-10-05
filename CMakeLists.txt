@@ -4,25 +4,19 @@ PROJECT(transabs)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
-#BOOST
+# BOOST
 set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED OFF)
 find_package(Boost COMPONENTS program_options filesystem system REQUIRED)
-if(Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIRS})
-else()
-  message(FATAL_ERROR "BOOST _is_ needed!")
-endif()
+include_directories(${Boost_INCLUDE_DIRS})
 
-find_package(HDF5)
-if(HDF5_FOUND)
-    include_directories(${HDF5_INCLUDE_DIRS})
-    link_directories(${HDF5_LIBRARY_DIRS})
-else()
-    message(FATAL_ERROR "HDF5 _is_ needed!")
-endif()
+# HDF5
+find_package(HDF5 REQUIRED)
+include_directories(${HDF5_INCLUDE_DIRS})
+link_directories(${HDF5_LIBRARY_DIRS})
 
-#Armadillo
+
+# Armadillo
 FIND_PATH(ARMA_HOME include/armadillo PATHS $ENV{HOME}/sw/x86_64 /opt/hpc)
 
 if(ARMA_HOME)
@@ -36,8 +30,15 @@ else()
   message(FATAL_ERROR "Armadillo _is_ needed!")
 endif()
 
+# MPI
+find_package(MPI REQUIRED)
+include_directories(${MPI_INCLUDE_PATH})
+set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
+set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
+
+
 
 ADD_EXECUTABLE(transabs src/Statistics.cpp src/Electron.cpp src/Localization.cpp src/main.cpp src/DirectSum.cpp src/Utils.cpp src/Argon.h src/Atom.h src/Common.h src/DirectSum.h src/Electron.h src/HDF5IO.h src/Laser.h src/Localization.h src/Utils.h src/VectorMap.h)
-target_link_libraries(transabs ${Boost_LIBRARIES} ${HDF5_LIBRARIES})
+target_link_libraries(transabs ${Boost_LIBRARIES} ${HDF5_LIBRARIES} ${MPI_LIBRARIES})
 
 #ADD_EXECUTABLE(t t.cc)
