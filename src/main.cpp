@@ -359,13 +359,13 @@ int main (int argc, char * argv[])
 
             if (i % ndtSnapshot == 0)
             {
-                h5dump.newGroup();
-                h5dump.add (fDumpVectors, Nparticles);
-                h5dump.add ("nlocByEnergy", nlocByEnergy, Natom);
-                h5dump.add ("nlocByRevAngle", nlocByRevAngle, Natom);
-                h5dump.add ("next_atom", next_atom, Nparticles);
-                h5dump.add ("revangle", revangle, Nparticles);
-                h5dump.closeGroup();
+                h5dump.newSnapshot();
+                h5dump.addSnapshotFields (fDumpVectors, Nparticles);
+                h5dump.addSnapshotField ("nlocByEnergy", nlocByEnergy, Natom);
+                h5dump.addSnapshotField ("nlocByRevAngle", nlocByRevAngle, Natom);
+                h5dump.addSnapshotField ("next_atom", next_atom, Nparticles);
+                h5dump.addSnapshotField ("revangle", revangle, Nparticles);
+                h5dump.closeSnapshot();
             }
 
             vx += (0.5 * dt) * fx % q % invmass;

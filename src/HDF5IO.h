@@ -30,8 +30,8 @@
 class HDF5IO
 {
     hid_t   fid, RawGID, StatGID;
-    hid_t   current_raw_group, current_stat_group;
-    int nRawGroups, nStatGroups;
+    hid_t   currentSnapshot;
+    int nSnapshots;
 
 
     hid_t GetH5T(double x) {
@@ -44,10 +44,10 @@ class HDF5IO
     }
 
 public:
-    HDF5IO(string fname) : nRawGroups(0), nStatGroups(0) {
+    HDF5IO(string fname) : nSnapshots(0) {
         fid = H5Fcreate(fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-        RawGID = H5Gcreate(fid, "Raw", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-        StatGID = H5Gcreate(fid, "Statistics", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        RawGID = H5Gcreate(fid, "Snapshots", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        StatGID = H5Gcreate(fid, "Stats", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     }
 
     ~HDF5IO() {
@@ -55,22 +55,22 @@ public:
         H5Fclose(fid);
     }
 
-    void newGroup() {
+    void newSnapshot() {
         stringstream gname;
 
-        gname << nRawGroups;
+        gname << nSnapshots;
 
-        current_raw_group = H5Gcreate(RawGID, gname.str().c_str(), H5P_DEFAULT,
-                                     H5P_DEFAULT, H5P_DEFAULT);
+        currentSnapshot = H5Gcreate(RawGID, gname.str().c_str(), H5P_DEFAULT,
+                                      H5P_DEFAULT, H5P_DEFAULT);
     }
-    
-    void closeGroup() {
-        H5Gclose(current_raw_group);
-        nRawGroups++;
+
+    void closeSnapshot() {
+        H5Gclose(currentSnapshot);
+        nSnapshots++;
     }
 
     template <typename T>
-    void add(VectorMap<T>& f, hsize_t N) {
+    void addSnapshotFields(VectorMap<T>& f, hsize_t N) {
 
         hid_t data_space, data_set_id, data_type;
         typename VectorMap<T>::iterator i;
@@ -83,7 +83,7 @@ public:
 
         for (i = f.begin(); i != f.end(); i++) {
 
-            data_set_id = H5Dcreate(current_raw_group, i->first.c_str(), data_type,
+            data_set_id = H5Dcreate(currentSnapshot, i->first.c_str(), data_type,
                                     data_space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
             H5Dwrite(data_set_id, data_type, H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -96,62 +96,84 @@ public:
     }
 
     template <typename T>
-    void add(const char *name, Col<T> &v, hsize_t N) {
+    void addSnapshotField(const char *name, Col<T> &v, hsize_t N) {
         hid_t data_space, data_set_id, data_type;
         T x;
 
         data_space = H5Screate_simple(1, &N, NULL);
         data_type = GetH5T(x);
 
-        data_set_id = H5Dcreate(current_raw_group, name, data_type, data_space,
-                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        data_set_id = H5Dcreate(currentSnapshot, name, data_type, data_space,
+                                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
         H5Dwrite(data_set_id, data_type, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                         v.memptr());
+                 v.memptr());
 
         H5Dclose(data_set_id);
 
         H5Sclose(data_space);
     }
-    
-    void addStatistics(const char *name, mat &m) {
+
+    void addStatsField(const char *name, mat &m) {
         hid_t data_space, data_set_id;
         hsize_t dims[2];
-        
+
         dims[1] = m.n_rows;
         dims[0] = m.n_cols;
-        
+
         data_space = H5Screate_simple(2, dims, NULL);
-        
+
         data_set_id = H5Dcreate(StatGID, name, H5T_NATIVE_DOUBLE, data_space,
                                 H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-        
+
         H5Dwrite(data_set_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                  m.memptr());
-        
+
         H5Dclose(data_set_id);
-        
+
+        H5Sclose(data_space);
+    }
+
+    void addStatsField(const char *name, cube &m) {
+        hid_t data_space, data_set_id;
+        hsize_t dims[3];
+
+        dims[2] = m.n_rows;
+        dims[1] = m.n_cols;
+        dims[0] = m.n_slices;
+
+        data_space = H5Screate_simple(3, dims, NULL);
+
+        data_set_id = H5Dcreate(StatGID, name, H5T_NATIVE_DOUBLE, data_space,
+                                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+        H5Dwrite(data_set_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                 m.memptr());
+
+        H5Dclose(data_set_id);
+
         H5Sclose(data_space);
     }
     
-        void addStatistics(const char *name, cube &m) {
+        void addStatsCubeSeries(const char *name, cube &m, hsize_t nCubes) {
         hid_t data_space, data_set_id;
-        hsize_t dims[3];
-        
-        dims[2] = m.n_rows;
-        dims[1] = m.n_cols;
-	dims[0] = m.n_slices;
-        
-        data_space = H5Screate_simple(3, dims, NULL);
-        
+        hsize_t dims[4];
+
+        dims[3] = m.n_rows;
+        dims[2] = m.n_cols;
+        dims[1] = m.n_slices/nCubes;
+        dims[0] = nCubes;
+
+        data_space = H5Screate_simple(4, dims, NULL);
+
         data_set_id = H5Dcreate(StatGID, name, H5T_NATIVE_DOUBLE, data_space,
                                 H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-        
+
         H5Dwrite(data_set_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                  m.memptr());
-        
+
         H5Dclose(data_set_id);
-        
+
         H5Sclose(data_space);
     }
 };
