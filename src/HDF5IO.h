@@ -21,10 +21,15 @@
 #ifndef HDF5IO_H
 #define HDF5IO_H
 
+#include <iostream>
+#include <cstdlib>
 
 #include <hdf5.h>
 
+
 #include "VectorMap.h"
+
+
 
 
 class HDF5IO
@@ -44,15 +49,38 @@ class HDF5IO
     }
 
 public:
-    HDF5IO(string fname) : nSnapshots(0) {
+    HDF5IO() : fid(-1) {}
+    HDF5IO(string fname) {
+        open(fname);
+    }
+    
+    void open(string fname) {
+        nSnapshots = 0;
         fid = H5Fcreate(fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+        if (fid < 0) {
+            std::cerr << "File " << fname << " could not be created\n.";
+            std::exit(EXIT_FAILURE);
+        }
         RawGID = H5Gcreate(fid, "Snapshots", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        if (RawGID < 0) {
+            std::cerr << "Group /Snapshots could not be created\n.";
+            std::exit(EXIT_FAILURE);
+        }
         StatGID = H5Gcreate(fid, "Stats", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        if (StatGID < 0) {
+            std::cerr << "Group /Stats could not be created\n.";
+            std::exit(EXIT_FAILURE);
+        }
     }
 
     ~HDF5IO() {
+        if (fid < 0) return;
         H5Gclose(StatGID);
         H5Fclose(fid);
+    }
+    
+    hid_t getFID() {
+        return fid;
     }
 
     void newSnapshot() {
