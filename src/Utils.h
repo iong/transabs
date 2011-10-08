@@ -13,6 +13,7 @@
 #include <armadillo>
 using namespace arma;
 
+extern void init_rng(int skip);
 extern double  myrand(void);
 
 extern void polar2cart ( double p[], double& x, double& y, double& z );

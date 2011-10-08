@@ -8,12 +8,27 @@
 
 
 #include <cmath>
+#include <sys/time.h>
+
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_01.hpp>
 
 #include "Utils.h"
 
 static boost::mt19937 rng;
+
+void init_rng(int skip)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    
+    rng.seed(tv.tv_usec);
+    
+    for (int i=0; i<skip; i++) {
+        myrand();
+    }
+}
+
 
 double  myrand(void)
 {
