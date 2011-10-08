@@ -14,7 +14,7 @@ public:
     LaserPulse(void) {}
 
     LaserPulse ( double i, double w, double T ) :
-        intensity ( i ), frequency ( w ), fwhm ( T ), zero ( 0.0 ), phase(0.0)
+        intensity ( i ), frequency ( w ), fwhm ( T ), zero ( 0.0 ), phase(0.5)
     {
         fmax = sqrt ( intensity );
     }
@@ -40,7 +40,7 @@ public:
 
     double field ( double t ) {
         double e = envelope ( t );
-        return fmax * cos ( frequency * ( t - zero ) + phase ) * e;
+        return fmax * sin ( frequency * ( t - zero ) + phase*M_PI ) * e;
     }
 };
 

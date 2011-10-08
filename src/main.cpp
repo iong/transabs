@@ -26,6 +26,7 @@
 #include "Statistics.h"
 #include "CubeHistogram.h"
 #include "VectorMap.h"
+#include "Utils.h"
 
 
 using namespace std;
@@ -70,6 +71,7 @@ void process_options (int argc, char * argv[])
         ("pump.wave-length", po::value<double>()->required(), "wave length of the pump laser [nm]")
         ("pump.intensity", po::value<double>()->required(), "intensity of the pump laser [W/cm^2]")
         ("pump.fwhm", po::value<double>()->required(), "pulse length of the pump laser [fs]")
+        ("pump.phase", po::value<double>(), "pulse phase of the pump laser [multiples of pi]")
         ("coordinates", po::value<string>()->required(), "initial coordinates of the cluster atoms")
         ("eps", po::value<double>()->required(), "soft-core parameter")
         ("tstart", po::value<double>()->required(), "soft-core parameter")
@@ -131,6 +133,9 @@ void process_options (int argc, char * argv[])
                                    45.5633525101396 / vm["pump.wave-length"].as<double>(),
                                    vm["pump.fwhm"].as<double>() * 41.3413733524035);
     pump->setZero (2.5 * vm["pump.fwhm"].as<double>() * 41.3413733524035);
+    if (vm.count ("pump.phase")) {
+        pump->setPhase(vm["pump.phase"].as<double>());
+    }
 
     dtSnapshot = vm["snapshot.interval"].as<double>();
     LocalizationAngle = vm["localization_angle"].as<double>() * M_PI;
