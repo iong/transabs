@@ -18,6 +18,8 @@
 
 */
 
+#include <mpi.h>
+
 #include <boost/assign/list_inserter.hpp>
 
 #include "Statistics.h"
@@ -284,6 +286,30 @@ void incrementRadialDistributions(size_t ie, vec &atomDist, vec &realCharge)
     {
         hist_delocalized.increment(atomDist, realCharge, t);
     }
+}
+template <typename ms>
+static void mpiReduce(ms &c)
+{
+    if (mpiRank != 0) {
+        MPI_Reduce(c.memptr(), NULL, c.n_elem, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    }
+    else {
+        MPI_Reduce(MPI_IN_PLACE, c.memptr(), c.n_elem, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    }
+}
+
+void centralizeStats()
+{
+    for (map<string, mat *>::iterator j = statFields.begin(); j != statFields.end(); j++)
+    {
+        mpiReduce<mat>(* (j->second));
+    }
+    
+    mpiReduce<cube>(hist_qfe.bins);
+    mpiReduce<cube>(hist_valence.bins);
+    mpiReduce<cube>(hist_localized.bins);
+    mpiReduce<cube>(hist_delocalized.bins);
+    mpiReduce<cube>(electronDensity.bins);
 }
 
 

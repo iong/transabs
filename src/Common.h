@@ -29,5 +29,7 @@ extern double  Utot, Eoffset, rcluster;
 
 extern void resize_vectors ();
 
+extern int mpiNProcs, mpiRank;
+
 
 #endif

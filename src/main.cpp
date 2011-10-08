@@ -12,6 +12,7 @@
 #include <cmath>
 #include <xmmintrin.h>
 
+#include <mpi.h>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/assign/list_inserter.hpp>
@@ -47,6 +48,8 @@ double  Utot, Eoffset, rcluster;
 VectorMap<double>   fDumpVectors, fVectors;
 VectorMap<int>  iVectors;
 
+int mpiNProcs = 1;
+int mpiRank = 0;
 int Nruns = 1;
 
 Krypton   sp;
@@ -213,21 +216,41 @@ int main (int argc, char * argv[])
 
     _mm_setcsr (_MM_MASK_MASK &~ (_MM_MASK_OVERFLOW | _MM_MASK_INVALID | _MM_MASK_DIV_ZERO));
 
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &mpiNProcs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
+
     process_options (argc, argv);
+
+    if (mpiNProcs > Nruns) {
+        cerr << "Too many processes("<<mpiNProcs<<")! Only " << Nruns;
+        cerr << " needed!\n";
+        MPI_Finalize();
+        return 1;
+    }
+
+    int localNruns = (Nruns + mpiNProcs - 1) / mpiNProcs;
+    if (mpiRank == mpiNProcs - 1) {
+        localNruns = Nruns - (mpiNProcs - 1) * localNruns;
+    }
 
     rt.load (vm["coordinates"].as<string>());
     rt *= 3.84 * 1.89;
     Natom = rt.n_rows;
     NMaxParticles = 5 * Natom;
-    
+
     initStats();
+    init_rng(mpiRank*1000000);
 
     ndt = (tstop - tstart) / dt;
     ndtSnapshot = dtSnapshot / dt;
 
-    HDF5IO h5dump (vm["snapshot.file"].as<string>());
-
-    for (int run = 0; run < Nruns; run++)
+    HDF5IO h5dump;
+    if (mpiRank == 0) {
+        h5dump.open(vm["snapshot.file"].as<string>());
+        cout << "HDF5 fid: "<<h5dump.getFID() << endl;
+    }
+    for (int run = 0; run < localNruns; run++)
     {
         NMaxParticles = NMaxParticles > q.n_elem ? NMaxParticles : q.n_elem;
         initParticleFields(NMaxParticles);
@@ -269,7 +292,7 @@ int main (int argc, char * argv[])
 
             collectStats (i);
 
-            if (i % ndtSnapshot == 0)
+            if (mpiRank == 0 && i % ndtSnapshot == 0)
             {
                 h5dump.newSnapshot();
                 h5dump.addSnapshotFields (fDumpVectors, Nparticles);
@@ -319,12 +342,18 @@ int main (int argc, char * argv[])
             }
         }
     }
+    
+    cout << "ll: " << mpiRank << endl;
 
+    centralizeStats();
 
-    normalizeStats(Nruns);
+    if (mpiRank == 0) {
+        normalizeStats(Nruns);
+        cout << "HDF5 fid: "<<h5dump.getFID() << endl;
+        dumpStats(h5dump);
+    }
 
-    dumpStats(h5dump);
-
+    MPI_Finalize();
 
     return 0;
 }

@@ -33,6 +33,7 @@ extern  void initStats();
 extern  void collectStats(int tslice);
 extern  void incrementRadialDistributions(size_t ie, vec &atomDist,
             vec &realCharge);
+extern  void centralizeStats();
 extern  void normalizeStats(int);
 
 class HDF5IO;
