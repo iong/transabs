@@ -192,9 +192,10 @@ void resize_vectors ()
 {
     VectorMap<double>::iterator jf;
     VectorMap<int>::iterator ji;
-    int N;
+    int N, oldN;
 
-    N = 1.5 * fVectors.begin()->second->n_rows;
+    oldN = fVectors.begin()->second->n_rows;
+    N = 1.5 * oldN;
 
     for (jf = fVectors.begin(); jf != fVectors.end(); jf++)
     {
@@ -205,6 +206,8 @@ void resize_vectors ()
     {
         ji->second->reshape (N, 1);
     }
+    
+    mass.rows(oldN, N-1).fill(1.0);
 }
 
 
@@ -235,7 +238,7 @@ int main (int argc, char * argv[])
     }
 
     rt.load (vm["coordinates"].as<string>());
-    rt *= 3.84 * 1.89;
+    rt *= sp.getLJDimer();;
     Natom = rt.n_rows;
     NMaxParticles = 5 * Natom;
 
