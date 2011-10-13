@@ -25,6 +25,13 @@
 void create_electron(Atom *a, int aid)
 {
     int	eid;
+
+    if ((q[aid] + 1) / soft_core < a->Eip(q[aid])) {
+	cerr << "Can't ionize q["<<aid<<"] = "<<q[aid]<<"; (q+1)/a = ";
+	cerr << (q[aid] + 1) / soft_core << " < ";
+	cerr << " Eip = "<< a->Eip(q[aid]) << endl;
+	return;
+    }
     
     if (Nparticles + 1 > q.n_elem ){
 	resize_vectors();
