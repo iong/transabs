@@ -90,7 +90,7 @@ void initStats()
 
 
     hist_qfe = CubeHistogram(0.0, vm["histogram.rmax"].as<double>(), vm["histogram.dr"].as<double>(),
-                             0.0, 11.0, 1.0,
+                             0, Natom, 1.0,
                              tstart, tstop, histogram_dt);
     hist_valence = hist_qfe;
     hist_localized = hist_qfe;

@@ -24,7 +24,6 @@ void DirectSum ()
     vec ir2 (Nparticles);
     vec ir3 (Nparticles);
     vec atomDist (Natom);
-    vec realCharge(Natom);
 
     fx.zeros();
     fy.zeros();
@@ -35,8 +34,9 @@ void DirectSum ()
     eps2 = soft_core * soft_core;
 
     new_next_atom_dist.fill (INFINITY);
-    realCharge = q.subvec(allAtoms) - 1.0;
-
+    vec realCharge = q.subvec(allAtoms) - 1.0;
+    vec atomIDs=linspace<vec>(0, Natom-1, Natom);
+    
     for (i = Nparticles - 1; i > 0; i--)
     {
         dx.rows(0, i-1) = x.rows(0, i-1) - x (i);
@@ -51,7 +51,7 @@ void DirectSum ()
         {
             atomDist = sqrt (ir2.rows (0, Natom - 1));
 
-            incrementRadialDistributions(i, atomDist, realCharge);
+            incrementRadialDistributions(i, atomDist, atomIDs);
 
             closest_atom = atomDist.min (closest_atom_id);
 
