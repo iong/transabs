@@ -18,6 +18,8 @@ private:
 
     static const int Z = 18;
     static const double mass = 40.0;
+    
+    static const double ljDimer = 7.10; // J. Chem. Phys. 99, 4518 (1993); doi:10.1063/1.466051
 
     static const double ionization_potentials[Z];
 
@@ -34,6 +36,11 @@ public:
     double getMass()
     {
         return mass * 1822.88848426455;
+    }
+    
+    double getLJDimer()
+    {
+        return ljDimer;
     }
 };
 

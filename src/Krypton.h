@@ -27,6 +27,8 @@ class Krypton : public Atom
 private:
     static const int Z = 36;
     static const double mass = 84.0;
+    
+    static const double ljDimer = 7.58; // DOI:10.1080/00268978900101821
 
     static const double ionization_potentials[Z];
 
@@ -42,6 +44,11 @@ public:
     double getMass()
     {
         return mass * 1822.88848426455;
+    }
+    
+    double getLJDimer()
+    {
+        return ljDimer;
     }
 };
 
