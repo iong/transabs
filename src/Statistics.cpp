@@ -42,20 +42,21 @@ CubeHistogram   electronDensity;
 
 CubeHistogram hist_qfe, hist_valence, hist_localized, hist_delocalized;
 
-cube rho_qfe, rho_valence ,rho_localized, rho_delocalized;
+cube rho_localized, rho_delocalized;
+Cube<int>    radDistNorm;
 
 map<string, mat *> statFields;
 
 vec ne_free, ne_localizedByEnergy, ne_localizedByRevAngle, ne_total, Ekinavg,
-	Epotavg, EoffsetAvg, statTime;
+    Epotavg, EoffsetAvg, statTime;
 mat cm, vcm, qavg, rcmQuasiFreeElectrons, vcmQuasiFreeElectrons,
-	rcmClusterElectrons, vcmClusterElectrons;
+    rcmClusterElectrons, vcmClusterElectrons;
 
 static int qMax;
+static double histogram_dt;
 
 void initStats()
 {
-    double histogram_dt;
 
     histogram_dt = vm["histogram.dt"].as<double>();
 
@@ -97,6 +98,8 @@ void initStats()
                              0, Natom*(qMax   + 1), 1.0,
                              tstart, tstop, histogram_dt);
     hist_delocalized = hist_localized;
+
+    radDistNorm.zeros(Natom, qMax+1, hist_localized.nzbins);
 
     if (vm.count ("grid.dx"))
     {
@@ -284,8 +287,10 @@ void incrementRadialDistributionsQ(size_t ie, vec &atomDist, vec &realCharge)
 {
     vec idx(Natom);
 
+    int tslice = floor(t - tstart) / histogram_dt;
     for (int i=0; i++; i < realCharge.n_elem) {
-	    idx(i) = min(realCharge(i), (double)qMax) * Natom + i;
+        idx(i) = min(realCharge(i), (double)qMax) * Natom + i;
+        radDistNorm(i, (int)realCharge(i), tslice) += 1;
     }
 
     if (revangle[ie] >= LocalizationAngle)
@@ -300,13 +305,13 @@ void incrementRadialDistributionsQ(size_t ie, vec &atomDist, vec &realCharge)
 
 #ifdef HAVE_MPI
 template <typename ms>
-static void mpiReduce(ms &c)
+static void mpiReduce(ms &c, MPI_Datatype dtype)
 {
     if (mpiRank != 0) {
-        MPI_Reduce(c.memptr(), NULL, c.n_elem, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(c.memptr(), NULL, c.n_elem, dtype, MPI_SUM, 0, MPI_COMM_WORLD);
     }
     else {
-        MPI_Reduce(MPI_IN_PLACE, c.memptr(), c.n_elem, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(MPI_IN_PLACE, c.memptr(), c.n_elem, dtype, MPI_SUM, 0, MPI_COMM_WORLD);
     }
 }
 
@@ -314,12 +319,13 @@ void centralizeStats()
 {
     for (map<string, mat *>::iterator j = statFields.begin(); j != statFields.end(); j++)
     {
-        mpiReduce<mat>(* (j->second));
+        mpiReduce<mat>(* (j->second), MPI_DOUBLE);
     }
 
-    mpiReduce<cube>(hist_localized.bins);
-    mpiReduce<cube>(hist_delocalized.bins);
-    mpiReduce<cube>(electronDensity.bins);
+    mpiReduce<cube>(hist_localized.bins, MPI_DOUBLE);
+    mpiReduce<cube>(hist_delocalized.bins, MPI_DOUBLE);
+    mpiReduce<cube>(electronDensity.bins, MPI_DOUBLE);
+    mpiReduce<Cube <int> >(radDistNorm, MPI_INT);
 }
 #endif
 
@@ -331,9 +337,19 @@ void normalizeStats(int nRuns)
         * (j->second) /= (double) nRuns;
     }
 
-    double norm = 1.0 / (double)(statSlabLength * nRuns);
-    hist_localized.bins   *= norm;
-    hist_delocalized.bins *= norm;
+    double norm;
+    for (size_t j = 0; j < radDistNorm.n_slices; j++) {
+        for (size_t k = 0; k < radDistNorm.n_cols; k++) {
+            for (size_t l = 0; l < radDistNorm.n_cols; l++) {
+		norm = radDistNorm(l, k, j);
+                if ( radDistNorm(l, k, j) == 0.0) continue;
+
+                hist_localized.bins.slice(j).col(k*Natom + l) /= norm;
+                hist_delocalized.bins.slice(j).col(k*Natom + l) /= norm;
+            }
+        }
+    }
+
     if (!electronDensity.empty()) {
         electronDensity.bins *= 1.0 / (double)(statSlabLength * nRuns);
     }
@@ -347,9 +363,9 @@ void normalizeStats(int nRuns)
     rho_localized = hist_localized.bins;
     rho_delocalized = hist_delocalized.bins;
 
-    for (size_t j = 0; j < rho_qfe.n_slices; j++)
+    for (size_t j = 0; j < rho_localized.n_slices; j++)
     {
-        for (size_t k = 0; k < rho_qfe.n_cols; k++)
+        for (size_t k = 0; k < rho_localized.n_cols; k++)
         {
             rho_localized.slice (j).col (k) /= shellVolumes;
             rho_delocalized.slice (j).col (k) /= shellVolumes;
@@ -375,6 +391,7 @@ void dumpStats(HDF5IO& h5dump)
     vec rbins(hist_qfe.get_xrange());
     h5dump.addCubeSeries1 ("rho_localized", rho_localized, qMax + 1);
     h5dump.addCubeSeries1 ("rho_delocalized", rho_delocalized, qMax + 1);
+    h5dump.addField ("radDistNorm", radDistNorm);
     h5dump.addField ("rbins", rbins);
     if (!electronDensity.empty()) {
         h5dump.addCubeSeries2("electronDensity", electronDensity.bins,
