@@ -61,4 +61,16 @@ public:
         return exp(-s*s);
     }
 };
+
+class GaussianKick : public GaussianLaserPulse {
+public:
+   GaussianKick (double i, double T) : GaussianLaserPulse(i, 0.0, T) {}
+
+   double field ( double t ) {
+        double e = envelope ( t );
+        return fmax * e;
+    }
+
+};
+
 #endif

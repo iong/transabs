@@ -77,6 +77,7 @@ void process_options (int argc, char * argv[])
         ("pump.intensity", po::value<double>()->required(), "intensity of the pump laser [W/cm^2]")
         ("pump.fwhm", po::value<double>()->required(), "pulse length of the pump laser [fs]")
         ("pump.phase", po::value<double>(), "pulse phase of the pump laser [multiples of pi]")
+        ("pump.shape", po::value<string>()->default_value("gauss"), "pulse shape")
         ("coordinates", po::value<string>()->required(), "initial coordinates of the cluster atoms")
         ("eps", po::value<double>()->required(), "soft-core parameter")
         ("tstart", po::value<double>()->required(), "soft-core parameter")
@@ -135,9 +136,15 @@ void process_options (int argc, char * argv[])
 
     // I_au = c eps_0 E_au^2/2
     // w_au = 2*pi*\hbar*c/E_H
+    if (vm["pump.shape"].as<string>().compare("GaussKick") == 0) {
+         pump = new GaussianKick (vm["pump.intensity"].as<double>() / 3.50944493695457e+16,
+                                   vm["pump.fwhm"].as<double>() * 41.3413733524035);
+    }
+    else {
     pump = new GaussianLaserPulse (vm["pump.intensity"].as<double>() / 3.50944493695457e+16,
                                    45.5633525101396 / vm["pump.wave-length"].as<double>(),
                                    vm["pump.fwhm"].as<double>() * 41.3413733524035);
+    }
     pump->setZero (2.5 * vm["pump.fwhm"].as<double>() * 41.3413733524035);
     if (vm.count ("pump.phase")) {
         pump->setPhase(vm["pump.phase"].as<double>());
