@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 
 PROJECT(transabs)
+if (CMAKE_CXX_COMPILER_ID STREQUAL Intel)
+    set(CMAKE_C_FLAGS_RELEASE "-O3 -msse3 -ipo -diag-disable 1011")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -msse3 -ipo -diag-disable 1011")
+endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
