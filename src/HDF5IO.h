@@ -142,7 +142,7 @@ public:
         H5Sclose(data_space);
     }
 
-    void addStatsField(const char *name, mat &m) {
+    void addField(const char *name, mat &m) {
         hid_t data_space, data_set_id;
         hsize_t dims[2];
 
@@ -162,7 +162,7 @@ public:
         H5Sclose(data_space);
     }
 
-    void addStatsField(const char *name, cube &m) {
+    void addField(const char *name, cube &m) {
         hid_t data_space, data_set_id;
         hsize_t dims[3];
 
@@ -183,7 +183,7 @@ public:
         H5Sclose(data_space);
     }
     
-        void addStatsCubeSeries(const char *name, cube &m, hsize_t nCubes) {
+        void addCubeSeries2(const char *name, cube &m, hsize_t nCubes) {
         hid_t data_space, data_set_id;
         hsize_t dims[4];
 
@@ -203,6 +203,29 @@ public:
         H5Dclose(data_set_id);
 
         H5Sclose(data_space);
+	}
+
+	void addCubeSeries1(const char *name, cube &m, hsize_t nSplits) {
+        hid_t data_space, data_set_id;
+        hsize_t dims[4];
+
+        dims[3] = m.n_rows;
+        dims[2] = m.n_cols/nSplits;
+        dims[1] = nSplits;
+        dims[0] = m.n_slices;
+
+        data_space = H5Screate_simple(4, dims, NULL);
+
+        data_set_id = H5Dcreate(StatGID, name, H5T_NATIVE_DOUBLE, data_space,
+                                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+        H5Dwrite(data_set_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                 m.memptr());
+
+        H5Dclose(data_set_id);
+
+        H5Sclose(data_space);
+
     }
 };
 

@@ -47,9 +47,11 @@ cube rho_qfe, rho_valence ,rho_localized, rho_delocalized;
 map<string, mat *> statFields;
 
 vec ne_free, ne_localizedByEnergy, ne_localizedByRevAngle, ne_total, Ekinavg,
-Epotavg, EoffsetAvg, statTime;
+	Epotavg, EoffsetAvg, statTime;
 mat cm, vcm, qavg, rcmQuasiFreeElectrons, vcmQuasiFreeElectrons,
-rcmClusterElectrons, vcmClusterElectrons;
+	rcmClusterElectrons, vcmClusterElectrons;
+
+static int qMax;
 
 void initStats()
 {
@@ -89,10 +91,10 @@ void initStats()
 
     qavg.zeros (Natom, statNSlabs);
 
-
+    qMax = vm["histogram.maximumCharge"].as<int>();
 
     hist_localized = CubeHistogram(0.0, vm["histogram.rmax"].as<double>(), vm["histogram.dr"].as<double>(),
-                             0, Natom, 1.0,
+                             0, Natom*(qMax   + 1), 1.0,
                              tstart, tstop, histogram_dt);
     hist_delocalized = hist_localized;
 
@@ -265,16 +267,34 @@ void collectStats(int tslice)
     sliceStats(tslice / statSlabLength);
 }
 
-void incrementRadialDistributions(size_t ie, vec &atomDist, vec &realCharge)
+void incrementRadialDistributions(size_t ie, vec &atomDist, vec &aid)
 {
 
     if (revangle[ie] >= LocalizationAngle)
     {
-        hist_localized.increment(atomDist, realCharge, t);
+        hist_localized.increment(atomDist, aid, t);
     }
     else
     {
-        hist_delocalized.increment(atomDist, realCharge, t);
+        hist_delocalized.increment(atomDist, aid, t);
+    }
+}
+
+void incrementRadialDistributionsQ(size_t ie, vec &atomDist, vec &realCharge)
+{
+    vec idx(Natom);
+
+    for (int i=0; i++; i < realCharge.n_elem) {
+	    idx(i) = min(realCharge(i), (double)qMax) * Natom + i;
+    }
+
+    if (revangle[ie] >= LocalizationAngle)
+    {
+        hist_localized.increment(atomDist, idx, t);
+    }
+    else
+    {
+        hist_delocalized.increment(atomDist, idx, t);
     }
 }
 
@@ -353,16 +373,16 @@ void dumpStats(HDF5IO& h5dump)
 
 
     vec rbins(hist_qfe.get_xrange());
-    h5dump.addStatsField ("rho_localized", rho_localized);
-    h5dump.addStatsField ("rho_delocalized", rho_delocalized);
-    h5dump.addStatsField ("rbins", rbins);
+    h5dump.addCubeSeries1 ("rho_localized", rho_localized, qMax + 1);
+    h5dump.addCubeSeries1 ("rho_delocalized", rho_delocalized, qMax + 1);
+    h5dump.addField ("rbins", rbins);
     if (!electronDensity.empty()) {
-        h5dump.addStatsCubeSeries("electronDensity", electronDensity.bins,
+        h5dump.addCubeSeries2("electronDensity", electronDensity.bins,
                                   statNSlabs);
     }
 
     for (map<string, mat *>::iterator j = statFields.begin(); j != statFields.end(); j++)
     {
-        h5dump.addStatsField (j->first.c_str(), * (j->second));
+        h5dump.addField (j->first.c_str(), * (j->second));
     }
 }

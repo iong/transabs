@@ -51,7 +51,7 @@ void DirectSum ()
         {
             atomDist = sqrt (ir2.rows (0, Natom - 1));
 
-            incrementRadialDistributions(i, atomDist, atomIDs);
+            incrementRadialDistributionsQ(i, atomDist, realCharge);
 
             closest_atom = atomDist.min (closest_atom_id);
 
