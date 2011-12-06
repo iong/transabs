@@ -162,20 +162,23 @@ public:
         H5Sclose(data_space);
     }
 
-    void addField(const char *name, cube &m) {
-        hid_t data_space, data_set_id;
+    template <typename T>
+    void addField(const char *name, Cube<T> &m) {
+        hid_t data_space, data_set_id, data_type;
         hsize_t dims[3];
+	T	x;
 
         dims[2] = m.n_rows;
         dims[1] = m.n_cols;
         dims[0] = m.n_slices;
 
         data_space = H5Screate_simple(3, dims, NULL);
+        data_type = GetH5T(x);
 
-        data_set_id = H5Dcreate(StatGID, name, H5T_NATIVE_DOUBLE, data_space,
+        data_set_id = H5Dcreate(StatGID, name, data_type, data_space,
                                 H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-        H5Dwrite(data_set_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+        H5Dwrite(data_set_id, data_type, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                  m.memptr());
 
         H5Dclose(data_set_id);
