@@ -32,13 +32,14 @@ endif()
 
 # MPI
 set(MPI_LIBRARIES)
-#find_package(MPI)
-#if (MPI_CXX_FOUND)
-#	include_directories(${MPI_INCLUDE_PATH})
-#	set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
-#	set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
-#	message("You should run as: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} PROCS ${MPIEXEC_PREFLAGS} transabs ${MPIEXEC_POSTFLAGS} ARGS")
-#endif()
+find_package(MPI)
+if (MPI_CXX_FOUND OR MPI_FOUND)
+	include_directories(${MPI_INCLUDE_PATH})
+	add_definitions(-DHAVE_MPI)
+	set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
+	set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
+	message("You should run as: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} PROCS ${MPIEXEC_PREFLAGS} transabs ${MPIEXEC_POSTFLAGS} ARGS")
+endif()
 
 
 ADD_EXECUTABLE(transabs src/Statistics.cpp src/Electron.cpp src/Localization.cpp src/main.cpp src/DirectSum.cpp src/Utils.cpp src/Argon.h src/Atom.h src/Common.h src/DirectSum.h src/Electron.h src/HDF5IO.h src/Laser.h src/Localization.h src/Utils.h src/VectorMap.h)
