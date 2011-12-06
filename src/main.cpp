@@ -12,7 +12,9 @@
 #include <cmath>
 #include <xmmintrin.h>
 
+#ifdef HAVE_MPI
 #include <mpi.h>
+#endif
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/assign/list_inserter.hpp>
@@ -219,16 +221,20 @@ int main (int argc, char * argv[])
 
     _mm_setcsr (_MM_MASK_MASK &~ (_MM_MASK_OVERFLOW | _MM_MASK_INVALID | _MM_MASK_DIV_ZERO));
 
+#ifdef HAVE_MPI
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &mpiNProcs);
     MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
+#endif
 
     process_options (argc, argv);
 
     if (mpiNProcs > Nruns) {
         cerr << "Too many processes("<<mpiNProcs<<")! Only " << Nruns;
         cerr << " needed!\n";
+#ifdef HAVE_MPI
         MPI_Finalize();
+#endif
         return 1;
     }
 
@@ -348,7 +354,9 @@ int main (int argc, char * argv[])
     
     cout << "ll: " << mpiRank << endl;
 
+#ifdef HAVE_MPI
     centralizeStats();
+#endif
 
     if (mpiRank == 0) {
         normalizeStats(Nruns);
@@ -356,7 +364,9 @@ int main (int argc, char * argv[])
         dumpStats(h5dump);
     }
 
+#ifdef HAVE_MPI
     MPI_Finalize();
+#endif
 
     return 0;
 }

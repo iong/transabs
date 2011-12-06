@@ -18,7 +18,9 @@
 
 */
 
+#ifdef HAVE_MPI
 #include <mpi.h>
+#endif
 
 #include <boost/assign/list_inserter.hpp>
 
@@ -275,6 +277,8 @@ void incrementRadialDistributions(size_t ie, vec &atomDist, vec &realCharge)
         hist_delocalized.increment(atomDist, realCharge, t);
     }
 }
+
+#ifdef HAVE_MPI
 template <typename ms>
 static void mpiReduce(ms &c)
 {
@@ -297,7 +301,7 @@ void centralizeStats()
     mpiReduce<cube>(hist_delocalized.bins);
     mpiReduce<cube>(electronDensity.bins);
 }
-
+#endif
 
 void normalizeStats(int nRuns)
 {
