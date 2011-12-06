@@ -89,12 +89,10 @@ void initStats()
 
 
 
-    hist_qfe = CubeHistogram(0.0, vm["histogram.rmax"].as<double>(), vm["histogram.dr"].as<double>(),
+    hist_localized = CubeHistogram(0.0, vm["histogram.rmax"].as<double>(), vm["histogram.dr"].as<double>(),
                              0, Natom, 1.0,
                              tstart, tstop, histogram_dt);
-    hist_valence = hist_qfe;
-    hist_localized = hist_qfe;
-    hist_delocalized = hist_qfe;
+    hist_delocalized = hist_localized;
 
     if (vm.count ("grid.dx"))
     {
@@ -268,16 +266,6 @@ void collectStats(int tslice)
 void incrementRadialDistributions(size_t ie, vec &atomDist, vec &realCharge)
 {
 
-
-    if (valence[ie])
-    {
-        hist_valence.increment(atomDist, realCharge, t);
-    }
-    else
-    {
-        hist_qfe.increment(atomDist, realCharge, t);
-    }
-
     if (revangle[ie] >= LocalizationAngle)
     {
         hist_localized.increment(atomDist, realCharge, t);
@@ -304,9 +292,7 @@ void centralizeStats()
     {
         mpiReduce<mat>(* (j->second));
     }
-    
-    mpiReduce<cube>(hist_qfe.bins);
-    mpiReduce<cube>(hist_valence.bins);
+
     mpiReduce<cube>(hist_localized.bins);
     mpiReduce<cube>(hist_delocalized.bins);
     mpiReduce<cube>(electronDensity.bins);
@@ -321,24 +307,19 @@ void normalizeStats(int nRuns)
         * (j->second) /= (double) nRuns;
     }
 
-    double norm = 1.0 / (double)(statSlabLength * Natom * nRuns);
-    hist_qfe.bins         *= norm;
-    hist_valence.bins     *= norm;
+    double norm = 1.0 / (double)(statSlabLength * nRuns);
     hist_localized.bins   *= norm;
     hist_delocalized.bins *= norm;
     if (!electronDensity.empty()) {
         electronDensity.bins *= 1.0 / (double)(statSlabLength * nRuns);
     }
     // Convert histograms to densities
-    vec shellVolumes, rbins (hist_qfe.get_xrange()), rmax;
-    rmax = hist_qfe.xmax;
+    vec shellVolumes, rbins (hist_localized.get_xrange()), rmax;
+    rmax = hist_localized.xmax;
 
-    shellVolumes = pow (join_cols (rbins.rows (1, rbins.n_elem - 1), rmax), 3) -
-                   pow (rbins, 3);
-    shellVolumes *= 4.0 * M_PI / 3.0;
+    shellVolumes = join_cols (rbins.rows (1, rbins.n_elem - 1), rmax);
+    shellVolumes = 4.0/3.0 * M_PI * ( pow(shellVolumes, 3) - pow(rbins, 3) );
 
-    rho_qfe = hist_qfe.bins;
-    rho_valence = hist_valence.bins;
     rho_localized = hist_localized.bins;
     rho_delocalized = hist_delocalized.bins;
 
@@ -346,8 +327,6 @@ void normalizeStats(int nRuns)
     {
         for (size_t k = 0; k < rho_qfe.n_cols; k++)
         {
-            rho_qfe.slice (j).col (k) /= shellVolumes;
-            rho_valence.slice (j).col (k) /= shellVolumes;
             rho_localized.slice (j).col (k) /= shellVolumes;
             rho_delocalized.slice (j).col (k) /= shellVolumes;
         }
@@ -370,13 +349,7 @@ void dumpStats(HDF5IO& h5dump)
 
 
     vec rbins(hist_qfe.get_xrange());
-    h5dump.addStatsField ("hist_qfe", hist_qfe.bins);
-    h5dump.addStatsField ("rho_qfe", rho_qfe);
-    h5dump.addStatsField ("hist_valence", hist_valence.bins);
-    h5dump.addStatsField ("rho_valence", rho_valence);
-    h5dump.addStatsField ("hist_localized", hist_localized.bins);
     h5dump.addStatsField ("rho_localized", rho_localized);
-    h5dump.addStatsField ("hist_delocalized", hist_delocalized.bins);
     h5dump.addStatsField ("rho_delocalized", rho_delocalized);
     h5dump.addStatsField ("rbins", rbins);
     if (!electronDensity.empty()) {
