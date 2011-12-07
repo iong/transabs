@@ -39,18 +39,18 @@ public:
     cube    bins;
 
     CubeHistogram () :
+            nxbins(0),
+            nybins(0),
+            nzbins(0),
             xmin (0),
             xmax (0),
             dx (1.0),
-            nxbins(0),
             ymin (0),
             ymax (0),
             dy (1.0),
-            nybins(0),
             zmin (0),
             zmax (0),
-            dz (1.0),
-            nzbins(0)
+            dz (1.0)
     {
     }
 
@@ -73,7 +73,7 @@ public:
     }
 
     CubeHistogram (double _xmin, double _dx, int _nxbins) :
-            xmin (_xmin), dx(_dx), nxbins(_nxbins)
+            nxbins(_nxbins), xmin (_xmin), dx(_dx) 
     {
 
         xmax = xmin + dx * nxbins;
@@ -92,12 +92,12 @@ public:
         bins.zeros(nxbins, nybins, nzbins);
     }
 
-    CubeHistogram (double _xmin, double _dx, int _nxbins,
-                   double _ymin, double _dy, int _nybins,
-                   double _zmin, double _dz, int _nzbins) :
-            xmin (_xmin), dx(_dx), nxbins(_nxbins),
-            ymin (_ymin), dy(_dy), nybins(_nybins),
-            zmin (_zmin), dz(_dz), nzbins(_nzbins)
+    CubeHistogram (double _xmin, double _dx, u32 _nxbins,
+                   double _ymin, double _dy, u32 _nybins,
+                   double _zmin, double _dz, u32 _nzbins) :
+            nxbins(_nxbins), nybins(_nybins), nzbins(_nzbins),
+            xmin (_xmin), dx(_dx), ymin (_ymin), dy(_dy),
+            zmin (_zmin), dz(_dz)
     {
         xmax = xmin + dx * nxbins;
         ymax = ymin + dy * nybins;
