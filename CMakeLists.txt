@@ -1,11 +1,27 @@
 cmake_minimum_required(VERSION 2.8)
 
 PROJECT(transabs)
+
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL Intel)
+    
     set(CMAKE_C_FLAGS_RELEASE "-O3 -msse3 -ipo -diag-disable 1011")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -msse3 -ipo -diag-disable 1011")
-endif()
 
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+
+    set(CMAKE_C_FLAGS_RELEASE "-O3")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL PGI)
+
+    set(CMAKE_CXX_FLAGS_RELEASE "-fast")
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Ktrap=fp")
+    set(CMAKE_C_FLAGS_RELEASE "-fast")
+    set(CMAKE_C_FLAGS_DEBUG "-O0 -g -Ktrap=fp")
+
+endif()
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
 # BOOST
@@ -36,15 +52,16 @@ endif()
 
 # MPI
 set(MPI_LIBRARIES)
-find_package(MPI)
-if (MPI_CXX_FOUND OR MPI_FOUND)
-	include_directories(${MPI_INCLUDE_PATH})
-	add_definitions(-DHAVE_MPI)
-	set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
-	set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
-	message("You should run as: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} PROCS ${MPIEXEC_PREFLAGS} transabs ${MPIEXEC_POSTFLAGS} ARGS")
+if (NOT DEFINED NO_MPI)
+	find_package(MPI)
+	if (MPI_CXX_FOUND OR MPI_FOUND)
+		include_directories(${MPI_INCLUDE_PATH})
+		add_definitions(-DHAVE_MPI)
+		set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
+		set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
+		message("You should run as: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} PROCS ${MPIEXEC_PREFLAGS} transabs ${MPIEXEC_POSTFLAGS} ARGS")
+	endif()
 endif()
-
 
 ADD_EXECUTABLE(transabs src/Statistics.cpp src/Electron.cpp src/Localization.cpp src/main.cpp src/DirectSum.cpp src/Utils.cpp src/Argon.h src/Atom.h src/Common.h src/DirectSum.h src/Electron.h src/HDF5IO.h src/Laser.h src/Localization.h src/Utils.h src/VectorMap.h)
 target_link_libraries(transabs ${Boost_LIBRARIES} ${HDF5_LIBRARIES} ${MPI_LIBRARIES})
