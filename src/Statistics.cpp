@@ -104,7 +104,7 @@ void initStats()
     if (vm.count ("grid.dx"))
     {
         double dx = vm["grid.dx"].as<double>();
-        int gridsize = vm["grid.size"].as<int>();
+        u32 gridsize = vm["grid.size"].as<int>();
 
         electronDensity  = CubeHistogram (-0.5*dx*gridsize, dx, gridsize,
                                           -0.5*dx*gridsize, dx, gridsize,
@@ -286,11 +286,17 @@ void incrementRadialDistributions(size_t ie, vec &atomDist, vec &aid)
 void incrementRadialDistributionsQ(size_t ie, vec &atomDist, vec &realCharge)
 {
     vec idx(Natom);
+    u32 iq, idx_;
 
-    int tslice = floor((t - tstart) / histogram_dt);
-    for (int i=0; i++; i < realCharge.n_elem) {
-        idx(i) = min(realCharge(i), (double)qMax) * Natom + i;
-        radDistNorm(i, (int)realCharge(i), tslice) += 1;
+    u32 tslice = floor((t - tstart) / histogram_dt);
+    for (u32 i=0; i < Natom; i++) {
+	iq = (u32) realCharge(i);
+	idx_ = iq*Natom + i;
+	if (iq > qMax) {
+		idx_ = qMax * Natom + i;
+	}
+        idx(i) = idx_;
+        radDistNorm(i, iq, tslice) += 1;
     }
 
     if (revangle[ie] >= LocalizationAngle)

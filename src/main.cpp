@@ -44,7 +44,6 @@ size_t Natom, Nparticles = 0;
 vec    q, mass, x, y, z, vx, vy, vz, fx, fy, fz, phi, next_atom_dist,
 new_next_atom_dist, revangle, active_electron_delay;
 ivec next_atom, new_next_atom, nlocByRevAngle, nlocByEnergy, valence;
-span allAtoms, allElectrons, allParticles;
 double  Utot, Eoffset, rcluster;
 
 VectorMap<double>   fDumpVectors, fVectors;
@@ -145,7 +144,7 @@ void process_options (int argc, char * argv[])
                                    45.5633525101396 / vm["pump.wave-length"].as<double>(),
                                    vm["pump.fwhm"].as<double>() * 41.3413733524035);
     }
-    pump->setZero (2.5 * vm["pump.fwhm"].as<double>() * 41.3413733524035);
+    pump->setZero (0.0 * vm["pump.fwhm"].as<double>() * 41.3413733524035);
     if (vm.count ("pump.phase")) {
         pump->setPhase(vm["pump.phase"].as<double>());
     }
@@ -163,8 +162,8 @@ void process_options (int argc, char * argv[])
 
 void initParticleFields (int NMaxParticles)
 {
-    typename VectorMap<int>::iterator       ji;
-    typename VectorMap<double>::iterator    jf;
+    VectorMap<int>::iterator       ji;
+    VectorMap<double>::iterator    jf;
 
     if (fVectors.empty()) {
         insert (fDumpVectors) ("q",  &q) ("mass", &mass)
@@ -191,10 +190,6 @@ void initParticleFields (int NMaxParticles)
     {
         ji->second->zeros (NMaxParticles);
     }
-
-    allAtoms = span (0, Natom);
-    allParticles = span (0, Natom);
-    allElectrons = span (0);
 }
 
 
@@ -298,7 +293,7 @@ int main (int argc, char * argv[])
 
         int ndtRClusterUpdate = 2.0 * 41 / dt; // every 2fs
 
-        for (int i = 0; i <= ndt; i++, t = tstart + dt * i)
+        for (int i = 0; i < ndt; i++, t = tstart + dt * i)
         {
             vec invmass = 1.0 / mass;
 
