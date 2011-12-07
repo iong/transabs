@@ -40,7 +40,7 @@ int statSlabLength, statNSlabs;
 
 CubeHistogram   electronDensity;
 
-CubeHistogram hist_qfe, hist_valence, hist_localized, hist_delocalized;
+CubeHistogram hist_localized, hist_delocalized;
 
 cube rho_localized, rho_delocalized;
 Cube<int>    radDistNorm;
@@ -287,7 +287,7 @@ void incrementRadialDistributionsQ(size_t ie, vec &atomDist, vec &realCharge)
 {
     vec idx(Natom);
 
-    int tslice = floor(t - tstart) / histogram_dt;
+    int tslice = floor((t - tstart) / histogram_dt);
     for (int i=0; i++; i < realCharge.n_elem) {
         idx(i) = min(realCharge(i), (double)qMax) * Natom + i;
         radDistNorm(i, (int)realCharge(i), tslice) += 1;
@@ -388,7 +388,7 @@ void dumpStats(HDF5IO& h5dump)
     insert (statFields) ("laserField", &laserField);
 
 
-    vec rbins(hist_qfe.get_xrange());
+    vec rbins(hist_localized.get_xrange());
     h5dump.addCubeSeries1 ("rho_localized", rho_localized, qMax + 1);
     h5dump.addCubeSeries1 ("rho_delocalized", rho_delocalized, qMax + 1);
     h5dump.addField ("radDistNorm", radDistNorm);
