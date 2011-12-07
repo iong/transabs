@@ -34,7 +34,7 @@ void DirectSum ()
     eps2 = soft_core * soft_core;
 
     new_next_atom_dist.fill (INFINITY);
-    vec realCharge = q.subvec(allAtoms) - 1.0;
+    vec realCharge = q.rows(0, Natom-1) - 1.0;
     vec atomIDs=linspace<vec>(0, Natom-1, Natom);
     
     for (i = Nparticles - 1; i > 0; i--)

@@ -24,7 +24,6 @@ extern double t, tstart, tstop, dt;
 extern vec    q, mass, invmass, x, y, z, vx, vy, vz, fx, fy, fz, phi, next_atom_dist,
     new_next_atom_dist, revangle;
 extern ivec next_atom, new_next_atom, nlocByRevAngle, nlocByEnergy, valence;
-extern span allAtoms, allElectrons, allParticles;
 extern double  Utot, Eoffset, rcluster;
 
 extern void resize_vectors ();
