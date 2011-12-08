@@ -2,23 +2,24 @@ cmake_minimum_required(VERSION 2.8)
 
 PROJECT(transabs)
 
+set(CMAKE_C_FLAGS_DEBUG "-O0 -g")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL Intel)
     
-    set(CMAKE_C_FLAGS_RELEASE "-O3 -msse3 -ipo -diag-disable 1011")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -msse3 -ipo -diag-disable 1011")
+	set(CMAKE_C_FLAGS_RELEASE "-O3 -msse3 -ipo -diag-disable 1011 -DNDEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -msse3 -ipo -diag-disable 1011 -DNDEBUG")
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
 
-    set(CMAKE_C_FLAGS_RELEASE "-O3")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+	set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL PGI)
 
-    set(CMAKE_CXX_FLAGS_RELEASE "-fast")
+    set(CMAKE_CXX_FLAGS_RELEASE "-fast -DNDEBUG")
     set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Ktrap=fp")
-    set(CMAKE_C_FLAGS_RELEASE "-fast")
+    set(CMAKE_C_FLAGS_RELEASE "-fast -DNDEBUG")
     set(CMAKE_C_FLAGS_DEBUG "-O0 -g -Ktrap=fp")
 
 endif()
