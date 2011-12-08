@@ -38,7 +38,7 @@ public:
         return fabs(t-zero) < 0.5*fwhm ? 1.0 : 0.0;
     }
 
-    double field ( double t ) {
+    virtual double field ( double t ) {
         double e = envelope ( t );
         return fmax * sin ( frequency * ( t - zero ) + phase*M_PI ) * e;
     }
