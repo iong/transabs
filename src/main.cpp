@@ -135,7 +135,7 @@ void process_options (int argc, char * argv[])
 
     // I_au = c eps_0 E_au^2/2
     // w_au = 2*pi*\hbar*c/E_H
-    if (vm["pump.shape"].as<string>().compare("GaussKick") == 0) {
+    if (vm["pump.shape"].as<string>().compare("GaussianKick") == 0) {
          pump = new GaussianKick (vm["pump.intensity"].as<double>() / 3.50944493695457e+16,
                                    vm["pump.fwhm"].as<double>() * 41.3413733524035);
     }
@@ -264,6 +264,7 @@ int main (int argc, char * argv[])
     }
     for (int run = 0; run < localNruns; run++)
     {
+	t = tstart;
         NMaxParticles = NMaxParticles > q.n_elem ? NMaxParticles : q.n_elem;
         initParticleFields(NMaxParticles);
 
@@ -324,6 +325,7 @@ int main (int argc, char * argv[])
             y += dt * vy;
             z += dt * vz;
 
+	    update_Zidx_ZCount();
             DirectSum();
 
             vx += (0.5 * dt) * fx % q % invmass;

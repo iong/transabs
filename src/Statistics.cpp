@@ -62,7 +62,7 @@ void initStats()
     histogram_dt = vm["histogram.dt"].as<double>();
 
     statSlabLength = histogram_dt / dt;
-    statNSlabs = (tstop - tstart) / histogram_dt + 1;
+    statNSlabs = (tstop - tstart) / histogram_dt;
 
     insert (statFields) ("ne_free", &ne_free)
     ("ne_localizedByEnergy", &ne_localizedByEnergy)
