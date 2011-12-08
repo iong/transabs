@@ -289,6 +289,7 @@ int main (int argc, char * argv[])
         active_electron_delay.set_size(Natom);
         active_electron_delay.fill(-1.0);
 
+        update_Zidx_ZCount();
         DirectSum();
 
         int ndtRClusterUpdate = 2.0 * 41 / dt; // every 2fs

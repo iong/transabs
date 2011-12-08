@@ -32,8 +32,8 @@ extern double kineticEnergy(size_t i);
 extern  void initStats();
 extern  void collectStats(int tslice);
 extern  void incrementRadialDistributions(size_t ie, vec &atomDist, vec &aid);
-extern  void incrementRadialDistributionsQ(size_t ie, vec &atomDist,
-            vec &realCharge);
+extern void update_Zidx_ZCount(void);
+extern  void incrementRadialDistributionsQ(size_t ie, vec &atomDist);
 extern  void centralizeStats();
 extern  void normalizeStats(int);
 
