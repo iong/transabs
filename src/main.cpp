@@ -144,7 +144,7 @@ void process_options (int argc, char * argv[])
                                    45.5633525101396 / vm["pump.wave-length"].as<double>(),
                                    vm["pump.fwhm"].as<double>() * 41.3413733524035);
     }
-    pump->setZero (0.0 * vm["pump.fwhm"].as<double>() * 41.3413733524035);
+    pump->setZero (2.5 * vm["pump.fwhm"].as<double>() * 41.3413733524035);
     if (vm.count ("pump.phase")) {
         pump->setPhase(vm["pump.phase"].as<double>());
     }
