@@ -1,0 +1,15 @@
+transabs
+========
+
+Electron nano-plasma driven by an IR laser pulse. Records spatio-temporal
+charge distributions for postprocessing with atomic structure code. Python
+glue.
+
+Header names are more or less self-explanatory.
+
+main.cpp : option processing with boost, main driver.
+
+Statistics.cpp records all density distributions and writes them in an HDF5 file.
+
+DirectSum.cpp computes all Coulombic forces in standard all pairs way. No tree-code here.
+
